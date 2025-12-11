@@ -15,6 +15,7 @@ public class Collectable {
     public boolean isVisible;
     public String originScreen;
     private AudioManager audioManager;
+
     public Collectable(final Main game, String path,float x, float y, float scale, boolean isVisible, String originScreen, AudioManager audioManager) {
         this.game = game;
         this.x = x;

@@ -124,18 +124,23 @@ public class GameOverScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 mainMenuButton.setColor(clickColor);
+
+                // Go back to the main menu properly
+                game.setScreen(new MainMenuScreen(game));
                 dispose();
-                game.resetGame();
             }
+
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 mainMenuButton.setColor(clickColor);
             }
+
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 mainMenuButton.setColor(normalColor);
             }
         });
+
     }
 
     @Override
