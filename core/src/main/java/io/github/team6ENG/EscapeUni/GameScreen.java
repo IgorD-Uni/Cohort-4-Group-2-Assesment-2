@@ -27,11 +27,10 @@ public class GameScreen implements Screen {
     private static final boolean DEBUG = false;
 
     private final Main game;
-
-    public Player player;
+    private Player player;
     private BuildingManager buildingManager;
 
-    public OrthographicCamera camera;
+    private OrthographicCamera camera;
     private TiledMapTileLayer collisionLayer;
     public Lighting lighting;
     public boolean isDark = false;
@@ -49,6 +48,20 @@ public class GameScreen implements Screen {
     Goose goose = new Goose();
     float stateTime;
     private Rectangle stealTorchTrigger;
+
+    // Negative event timers
+    private float beerTimer = 0f;
+    private float pizzaTimer = 0f;
+
+    // Negative event flagsF
+    private boolean beerActive = false;
+    private boolean pizzaActive = false;
+
+    // Control mapping for pizza effect
+    private boolean controlsRotated = false;
+    private boolean isScreenFlipped = false;
+
+
 
 
     public boolean hasTorch = false;
@@ -183,11 +196,17 @@ public class GameScreen implements Screen {
      * They will then appear on screen and allow the player to pick them up
      */
     private void initialiseItems() {
+        int playerX = 940;
+        int playerY = 1215;
         items.put("gooseFood", new Collectable(game, "items/gooseFood.png",   500, 1500, 0.03f, true, "GameScreen", audioManager));
         items.put("keyCard", new Collectable(game, game.activeUniIDPath,   300, 200, 0.05f, false, "RonCookeScreen", audioManager));
         items.put("torch", new Collectable(game, "items/torch.png",   300, 220, 0.1f, false, "RonCookeScreen", audioManager));
         items.put("pizza", new Collectable(game, "items/pizza.png", 600, 100, 0.4f, true, "LangwithScreen", audioManager));
         items.put("phone", new Collectable(game, "items/phone.png", 100, 100, 0.05f, true, "LangwithScreen", audioManager));
+        items.put("beer", new Collectable(game, "items/beerIcon.png", 500, 800, 0.1f, true, "GameScreen", audioManager));
+        items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 250, 300, 0.1f, true, "GameScreen", audioManager));
+
+
 
 
     }
@@ -206,7 +225,6 @@ public class GameScreen implements Screen {
      * @param delta - Time since last frame
      */
     private void update(float delta) {
-
 
         // bus logic
         if (items.get("phone").playerHas && !playerOnBus) {
@@ -240,10 +258,16 @@ public class GameScreen implements Screen {
             Gdx.gl.glClearColor(0, 0, 0, Math.min(1, (busX - 1500) / 300f));
 
             if (busX < 950) {
-                Gdx.app.postRunnable(() -> game.setScreen(
-                    new WinScreen(game)
-                ));
+                final int finalScore = Math.max(0, (int) game.score);
+                Gdx.app.postRunnable(() -> {
+                    game.setScreen(new GameOverNamePrompt(game, finalScore, name -> {
+                        LeaderboardManager.getInstance().addScore(name, finalScore);
+                        // Now go to WinScreen (you likely have a WinScreen that shows congratulations)
+                        game.setScreen(new WinScreen(game));
+                    }));
+                });
             }
+
         }
         lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
 
@@ -254,6 +278,24 @@ public class GameScreen implements Screen {
             game.score -= delta;
             handleInput(delta);
             player.handleInput(delta, playerSpeedModifier);
+            // Update negative event timers
+            if (beerActive) {
+                beerTimer -= delta;
+                if (beerTimer <= 0) {
+                    beerActive = false;
+                    isScreenFlipped = false; // reset screen flip
+                }
+            }
+
+
+            if (pizzaActive) {
+                pizzaTimer -= delta;
+                if (pizzaTimer <= 0) {
+                    pizzaActive = false;
+                    controlsRotated = false; // reset controls
+                }
+            }
+
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
@@ -308,18 +350,31 @@ public class GameScreen implements Screen {
                 Collectable item = items.get(key);
                 if(!item.playerHas && item.isVisible && item.originScreen.equals("GameScreen")){
                     if (item.checkInRange(player.sprite.getX(), player.sprite.getY()) && isEPressed){
-                        if (key == "statue"){
-                            item.isVisible = false;
-                            isEPressed = false;
-                            continue;
-                        }
                         item.Collect();
                         numOfInventoryItems += 1;
-                        isEPressed = false;
+
+                        // === NEGATIVE EVENTS ===
+                        if (key.equals("beer")) {
+                            beerActive = true;
+                            beerTimer = 30f; // 30 seconds
+                            isScreenFlipped = true; // activate screen flip
+                            game.foundNegativeEvents += 1;
+                        }
+
+
+                        if (key.equals("pizza")) {
+                            pizzaActive = true;
+                            pizzaTimer = 30f; // 30 seconds
+                            controlsRotated = true; // flag for rotated controls
+                            game.foundNegativeEvents += 1;
+                        }
+                        // ======================
+
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
                         }
 
+                        isEPressed = false;
                     }
                 }
             }
@@ -416,7 +471,7 @@ public class GameScreen implements Screen {
     /**
      * Make camera follow player
      */
-     void updateCamera() {
+    private void updateCamera() {
 
         float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
         float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
@@ -555,6 +610,14 @@ public class GameScreen implements Screen {
 
         game.batch.end();
 
+        if (isScreenFlipped) {
+            camera.up.set(0, -1, 0); // flip camera vertically
+        } else {
+            camera.up.set(0, 1, 0);  // normal
+        }
+        camera.update();
+
+
         renderUI();
 
 
@@ -613,11 +676,6 @@ public class GameScreen implements Screen {
                 item.img.draw(game.batch, 1);
                 itemXPos += 32;
                 instructions = getInstructions(key);
-
-            }
-            else if (item.originScreen.equals("GameScreen") && item.isVisible &&
-                key == "statue" && item.checkInRange(player.sprite.getX(), player.sprite.getY())){
-                instructions = "Pray to the Long Boi";
 
             }
             else if (item.originScreen.equals("GameScreen") && item.isVisible && item.checkInRange(player.sprite.getX(), player.sprite.getY())) {
@@ -695,11 +753,21 @@ public class GameScreen implements Screen {
         gameoverTrigger = true;
         audioManager.stopMusic();
         audioManager.stopFootsteps();
-        Gdx.app.postRunnable(() -> game.setScreen(
-            new GameOverScreen(game, "Sorry you missed the bus, better luck next time")
-        ));
 
+        // final score: use remaining (rounded) seconds from game.score or game.gameTimer
+        final int finalScore = Math.max(0, (int) game.score);
+
+        Gdx.app.postRunnable(() -> {
+            game.setScreen(new GameOverNamePrompt(game, finalScore, name -> {
+                // Save name + score
+                LeaderboardManager.getInstance().addScore(name, finalScore);
+
+                // Then show standard Game Over screen (existing one)
+                game.setScreen(new GameOverScreen(game, "Sorry you missed the bus, better luck next time"));
+            }));
+        });
     }
+
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
