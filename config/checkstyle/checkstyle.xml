@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
-<!DOCTYPE module PUBLIC
-    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
-    "https://checkstyle.org/dtds/configuration_1_3.dtd"
-
 <module name="Checker">
-    <!-- very minimal ruleset: currently only checks for a tiny set of issues. -->
+    <!-- Only enabling the UpperEll rule -->
     <module name="TreeWalker">
         <module name="UpperEll"/>
     </module>
