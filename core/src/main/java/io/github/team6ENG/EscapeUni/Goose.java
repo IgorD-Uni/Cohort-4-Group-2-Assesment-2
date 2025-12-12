@@ -2,6 +2,8 @@ package io.github.team6ENG.EscapeUni;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+//David Modifications
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,13 +19,18 @@ public class Goose extends SpriteAnimations {
     public boolean hasStolenTorch = false;
     public TextureRegion currentGooseFrame;
     private float speed = 0.75f;
-    private int idleDistance = 20;
+    //David Modifications - changed to help with hitbox issue
+    private int idleDistance = 15;
     public boolean isFlying;
     private TiledMapTileLayer.Cell cell;
     public Goose baby = null;
     public boolean attackModeActivated = false;
     public boolean isSleeping = false;
     private List<int[]> runPath =  Arrays.asList(new int[]{700, 400}, new int[]{340, 300}, new int[]{600, 150}, new int[]{550, 50});
+    //David Modifications
+    private boolean paused = false;
+    private float pauseTimer = 0.0f;
+    public boolean hadGooseFood = false;
     /**
      * Generate goose and its animations
      */
@@ -77,6 +84,8 @@ public class Goose extends SpriteAnimations {
      * @param isPlayerMoving is player moving
      */
     public void moveGoose(float stateTime, float followX, float followY, boolean isPlayerMoving, boolean followIsSleeping) {
+        //David modifications: Pause once hit player for duration
+        if(paused){return;}
 
         int tileX = (int)(x+ getWidth() / 2) / tileDimensions;
         int tileY = (int)(y+ getHeight() / 2) / tileDimensions;
@@ -166,6 +175,29 @@ public class Goose extends SpriteAnimations {
         }
     }
 
+    //David Modifications - Hitbox for contact with player sprite
+    public void checkHitbox(Rectangle playerBounds, HealthSystem healthSystem, boolean hasGooseFood, float delta) {
+        if (hadGooseFood) {
+            return;
+        }
+
+        if (paused) {
+            pauseTimer -= delta;
+            if (pauseTimer <= 0) {
+                paused = false;
+            }
+            return;
+        }
+
+        Rectangle gooseBounds = new Rectangle(x, y, getWidth(), getHeight());
+        float playerCenterX = playerBounds.x + (playerBounds.width / 2);
+        float playerCenterY = playerBounds.y + (playerBounds.height / 2);
+        if (gooseBounds.contains(playerCenterX, playerCenterY)) {
+            healthSystem.takeDamage(20f);
+            paused = true;
+            pauseTimer = 3.0f;
+        }
+    }
     /**
      * get width of goose frame
      * @return width of goose
@@ -229,5 +261,3 @@ public class Goose extends SpriteAnimations {
 
     }
 }
-
-

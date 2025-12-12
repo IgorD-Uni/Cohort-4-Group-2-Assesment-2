@@ -14,6 +14,8 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
+//David Modifications
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -27,7 +29,7 @@ public class GameScreen implements Screen {
     private static final boolean DEBUG = false;
 
     private final Main game;
-    private Player player;
+    public Player player;
     private BuildingManager buildingManager;
 
     private OrthographicCamera camera;
@@ -60,8 +62,7 @@ public class GameScreen implements Screen {
     // Control mapping for pizza effect
     private boolean controlsRotated = false;
     private boolean isScreenFlipped = false;
-
-
+    Dean dean;
 
 
     public boolean hasTorch = false;
@@ -72,6 +73,8 @@ public class GameScreen implements Screen {
     private boolean gooseStolenTorch = false;
 
     private final float probabilityOfHonk = 1000;
+    //David Modifications
+    private boolean hasShield = false;
 
     public final HashMap<String, Collectable> items = new HashMap<String, Collectable>();
     public int numOfInventoryItems = 0;
@@ -85,6 +88,9 @@ public class GameScreen implements Screen {
     public float playerSpeedModifier = 1;
 
     public AudioManager audioManager;
+    //David Modifications
+    private HealthSystem healthSystem;
+    private ShapeRenderer shapeRenderer;
 
     /**
      * Initialise the game elements
@@ -108,6 +114,9 @@ public class GameScreen implements Screen {
         initialiseItems();
 
         initialiseBus();
+
+        //David Modifications
+        initialiseHealth();
 
         buildingManager = new BuildingManager(game, this, player, audioManager);
         stateTime = 0f;
@@ -160,7 +169,6 @@ public class GameScreen implements Screen {
 
     }
 
-
     /**
     * Add and hide light circles for player and goose
      */
@@ -203,12 +211,11 @@ public class GameScreen implements Screen {
         items.put("torch", new Collectable(game, "items/torch.png",   300, 220, 0.1f, false, "RonCookeScreen", audioManager));
         items.put("pizza", new Collectable(game, "items/pizza.png", 600, 100, 0.4f, true, "LangwithScreen", audioManager));
         items.put("phone", new Collectable(game, "items/phone.png", 100, 100, 0.05f, true, "LangwithScreen", audioManager));
+        items.put("shield", new Collectable(game, "items/shield.png", 960, 1200, 0.1f, true, "GameScreen", audioManager));
+        items.put("healthBoost", new Collectable(game, "items/healthBoost.png", 920, 1200, 0.1f, true, "GameScreen", audioManager));
+        items.put("healthBoost2", new Collectable(game, "items/healthBoost.png", 520, 1500, 0.1f, true, "GameScreen", audioManager));
         items.put("beer", new Collectable(game, "items/beerIcon.png", 500, 800, 0.1f, true, "GameScreen", audioManager));
         items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 250, 300, 0.1f, true, "GameScreen", audioManager));
-
-
-
-
     }
     private void initialiseBus() {
         busTexture = new Texture(Gdx.files.internal("images/bus.png"));
@@ -218,6 +225,14 @@ public class GameScreen implements Screen {
     private  void initialiseAudio() {
         audioManager = new AudioManager(game);
 
+    }
+    //David modifications
+    private void initialiseHealth() {
+        healthSystem = new HealthSystem();
+        shapeRenderer = new ShapeRenderer();
+    }
+    private void initialiseDean(float x, float y) {
+        dean = new Dean("sprites/dean.png", x, y, collisionLayer, mapWallsId, tileDimensions);
     }
 
     /**
@@ -266,8 +281,10 @@ public class GameScreen implements Screen {
                         game.setScreen(new WinScreen(game));
                     }));
                 });
+                Gdx.app.postRunnable(() -> game.setScreen(
+                    new WinScreen(game)
+                ));
             }
-
         }
         lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
 
@@ -278,6 +295,7 @@ public class GameScreen implements Screen {
             game.score -= delta;
             handleInput(delta);
             player.handleInput(delta, playerSpeedModifier);
+
             // Update negative event timers
             if (beerActive) {
                 beerTimer -= delta;
@@ -295,6 +313,7 @@ public class GameScreen implements Screen {
                     controlsRotated = false; // reset controls
                 }
             }
+
 
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
@@ -345,7 +364,7 @@ public class GameScreen implements Screen {
                 trail = trail.baby;
             }
 
-            // Check if player can pick up items
+            // Check if player can pick up items, David modifications include shield and health boost items, and their conditionals
             for(String key: items.keySet()){
                 Collectable item = items.get(key);
                 if(!item.playerHas && item.isVisible && item.originScreen.equals("GameScreen")){
@@ -370,11 +389,31 @@ public class GameScreen implements Screen {
                         }
                         // ======================
 
+                        isEPressed = false;
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
+                            item.Collect();
+                            numOfInventoryItems += 1;
+                            //David Modifications - initialise once have picked up goose food
+                            initialiseDean(920, 1250);
+                        }
+                        else if (key.startsWith("shield")){
+                            healthSystem.shieldOn();
+                            hasShield = true;
+                            item.Collect();
+                            numOfInventoryItems += 1;
+                        }
+                        else if (key.startsWith("healthBoost")){
+                            healthSystem.heal(25f);
+                            item.isVisible = false;
+                        }
+                        else {
+                            item.Collect();
+                            numOfInventoryItems += 1;
                         }
 
                         isEPressed = false;
+
                     }
                 }
             }
@@ -391,10 +430,34 @@ public class GameScreen implements Screen {
                 game.foundHiddenEvents += 1;
                 game.score += 100;
                 hasGooseFood = false;
+                //David Modifications - stop attacking human after food fed
+                goose.hadGooseFood = true;
             }
 
             isEPressed = false;
 
+
+            //David modifications for health system collection
+            healthSystem.update(delta);
+
+            if (hasShield && !healthSystem.isInvincible()) {
+                hasShield = false;
+                items.remove("shield");
+                numOfInventoryItems -= 1;
+            }
+
+            Rectangle playerBounds = new Rectangle(
+                player.sprite.getX(),
+                player.sprite.getY(),
+                player.sprite.getWidth(),
+                player.sprite.getHeight()
+            );
+
+            goose.checkHitbox(playerBounds, healthSystem, goose.hadGooseFood, delta);
+
+            if (dean != null) {
+                dean.update(stateTime, delta, player, healthSystem);
+            }
 
             if(hasTorch || gooseStolenTorch){
                 Rectangle playerRect = new Rectangle(
@@ -455,6 +518,11 @@ public class GameScreen implements Screen {
            gameOver();
            return;
         }
+        //David Modifications - End game
+        if (healthSystem.isDead()) {
+            gameOver();
+            return;
+        }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
                 audioManager.pauseMusic();
@@ -465,7 +533,6 @@ public class GameScreen implements Screen {
         buildingManager.update(delta);
 
         playAudio();
-
     }
 
     /**
@@ -557,6 +624,11 @@ public class GameScreen implements Screen {
 
         game.batch.draw(goose.currentGooseFrame, goose.x, goose.y);
 
+        //David Modifications
+        if (dean != null) {
+            dean.render(game.batch);
+        }
+
         //Draw yellow baby geese
         game.batch.setColor(Color.YELLOW);
         Goose trail = goose;
@@ -606,8 +678,6 @@ public class GameScreen implements Screen {
             game.batch.draw(lighting.render(camera, mapWidth, mapHeight), 0, 0);
         }
 
-
-
         game.batch.end();
 
         if (isScreenFlipped) {
@@ -617,6 +687,8 @@ public class GameScreen implements Screen {
         }
         camera.update();
 
+        //David Modifications
+        healthSystem.render(shapeRenderer, camera);
 
         renderUI();
 
@@ -724,7 +796,6 @@ public class GameScreen implements Screen {
             smallFont.draw(game.batch, "PAUSED", (float) worldWidth / 2, worldHeight - 100);
         }
 
-
         buildingManager.renderUI(game.batch, smallFont, bigFont, worldWidth, worldHeight);
         game.batch.end();
 
@@ -749,6 +820,7 @@ public class GameScreen implements Screen {
         return "";
     }
 
+    //David Modifications - losing game on basis losing health or time up (bus gone)
     public void gameOver(){
         gameoverTrigger = true;
         audioManager.stopMusic();
@@ -766,8 +838,15 @@ public class GameScreen implements Screen {
                 game.setScreen(new GameOverScreen(game, "Sorry you missed the bus, better luck next time"));
             }));
         });
-    }
 
+
+        String message = (healthSystem.isDead())
+            ? "You lost all your health, better luck next time"
+            : "Sorry you missed the bus, better luck next time";
+        Gdx.app.postRunnable(() -> game.setScreen(
+            new GameOverScreen(game, message)
+        ));
+    }
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
@@ -832,5 +911,13 @@ public class GameScreen implements Screen {
 
         if (busTexture != null) busTexture.dispose();
 
+        //David Modifications
+        if (shapeRenderer != null) {
+            shapeRenderer.dispose();
+        }
+
+        if (dean != null) {
+            dean.dispose();
+        }
     }
 }
