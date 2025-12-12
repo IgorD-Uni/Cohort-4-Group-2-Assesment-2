@@ -156,7 +156,7 @@ public class SecretEventScreen implements Screen {
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
             if (pauseTimer>=28){
-                gameScreen.getplayer().sprite.setPosition(200,200);
+                gameScreen.getPlayer().sprite.setPosition(200,200);
                 buildingManager.exitBuilding();
             }
             return;
