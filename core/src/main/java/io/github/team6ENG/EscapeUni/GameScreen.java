@@ -691,6 +691,10 @@ public class GameScreen implements Screen {
         return "";
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     public void gameOver(){
         gameoverTrigger = true;
         audioManager.stopMusic();
