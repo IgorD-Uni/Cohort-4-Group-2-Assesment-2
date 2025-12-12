@@ -65,7 +65,6 @@ public class Player extends SpriteAnimations{
         torch.setScale(0.02f);
         torch.setRotation(180);
 
-
     }
 
     /**
@@ -73,88 +72,65 @@ public class Player extends SpriteAnimations{
      * @param delta time in seconds since last frame
      */
     public void handleInput(float delta, float speedModifier) {
-        float actualSpeed = speed * speedModifier* 60f * delta;
-        if(inWater){actualSpeed /=2;}
-        TiledMapTileLayer.Cell cell;
-        int x = (int)(sprite.getX()+(sprite.getWidth()/2))/tileDimensions;
-        int y = (int)(sprite.getY()+(sprite.getHeight()/2))/tileDimensions;
-        int mapWidth = wallsLayer.getWidth();
-        int mapHeight = wallsLayer.getHeight();
 
+        float actualSpeed = speed * speedModifier * 60f * delta;
+        if(inWater) actualSpeed /= 2;
 
         isMoving = false;
         isFacingLeft = false;
         isFacingUp = false;
         isMovingHorizontally = false;
-        // move up
+
+        float newX = sprite.getX();
+        float newY = sprite.getY();
+
+        // ----- Movement Input ----- //
         if (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            if (y + 1 < mapHeight) {
-                cell = wallsLayer.getCell(x, y + 1);
-                if (cell == null || cell.getTile().getId() != mapWallsId &&(cell.getTile().getId() != mapLangwithBarriersId || hasEnteredLangwith)) {
-                    sprite.translateY(actualSpeed);
-                    isMoving = true;
-                    isFacingUp = true;
-                }
-                checkIfInWater(cell);
+            if (canMoveTo(newX, newY + actualSpeed, wallsLayer)) {
+                newY += actualSpeed;
+                isMoving = true;
+                isFacingUp = true;
             }
         }
-
-        // move down
         if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            if (y - 1 >= 0) {
-                cell = wallsLayer.getCell(x, y -1);
-                if (cell == null || cell.getTile().getId() != mapWallsId&&(cell.getTile().getId() != mapLangwithBarriersId || hasEnteredLangwith)) {
-                    sprite.translateY(-actualSpeed);
-                    isMoving = true;
-                    isFacingUp = false;
-                }
-                checkIfInWater(cell);
+            if (canMoveTo(newX, newY - actualSpeed, wallsLayer)) {
+                newY -= actualSpeed;
+                isMoving = true;
             }
         }
-
-        // move left
         if (Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            if (x - 1 >= 0) {
-                cell = wallsLayer.getCell(x -1 , y);
-                if (cell == null || cell.getTile().getId() != mapWallsId &&(cell.getTile().getId() != mapLangwithBarriersId || hasEnteredLangwith)) {
-                    sprite.translateX(-actualSpeed);
-                    isMoving = true;
-                    isFacingLeft = true;
-                    isMovingHorizontally = true;
-                }
-                checkIfInWater(cell);
+            if (canMoveTo(newX - actualSpeed, newY, wallsLayer)) {
+                newX -= actualSpeed;
+                isFacingLeft = true;
+                isMoving = true;
+                isMovingHorizontally = true;
             }
-
         }
-
-        // move right
         if (Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            if (x + 1 < mapWidth) {
-                cell = wallsLayer.getCell(x + 1, y);
-                if (cell == null || cell.getTile().getId() != mapWallsId&&(cell.getTile().getId() != mapLangwithBarriersId || hasEnteredLangwith)) {
-                    sprite.translateX(actualSpeed);
-                    isMoving = true;
-                    isFacingLeft = false;
-                    isMovingHorizontally = true;
-                }
-                checkIfInWater(cell);
-
+            if (canMoveTo(newX + actualSpeed, newY, wallsLayer)) {
+                newX += actualSpeed;
+                isMoving = true;
+                isMovingHorizontally = true;
             }
-
         }
 
+        // 🔥 Move only if safe
+        sprite.setPosition(newX, newY);
 
-        // check boundary
+        // Check if new tile is water
+        TiledMapTileLayer.Cell cell = wallsLayer.getCell(
+            (int)((newX + sprite.getWidth()/2) / tileDimensions),
+            (int)((newY + sprite.getHeight()/2) / tileDimensions)
+        );
+        checkIfInWater(cell);
+
+        // Boundaries + footsteps
         keepPlayerInBounds();
         if(isMoving && !isFootsteps){
-            isFootsteps = true;
-            audioManager.loopFootsteps();
+            isFootsteps = true; audioManager.loopFootsteps();
+        } else if (!isMoving){
+            isFootsteps = false; audioManager.stopFootsteps();
         }
-        else if (!isMoving){
-            isFootsteps = false;
-            audioManager.stopFootsteps();
-        }
-
     }
 
     private void checkIfInWater(TiledMapTileLayer.Cell cell){
@@ -233,13 +209,24 @@ public class Player extends SpriteAnimations{
 
         }
         else{
-
             currentPlayerFrame = animations.get("idle").getKeyFrame(stateTime, true);
             torch.setRotation(-60);
             torch.setPosition(sprite.getX() + 22, sprite.getY() + 26);
         }
         sprite.setRegion(currentPlayerFrame);
 
+    }
+
+    private boolean canMoveTo(float newX, float newY, TiledMapTileLayer wallsLayer) {
+        int tileX = (int)((newX + sprite.getWidth()/2) / tileDimensions);
+        int tileY = (int)((newY + sprite.getHeight()/2) / tileDimensions);
+
+        TiledMapTileLayer.Cell cell = wallsLayer.getCell(tileX, tileY);
+
+        // If null = no tile = walkable, OR tile isn't a wall/barrier, OR barrier but Langwith unlocked
+        return (cell == null
+            || (cell.getTile().getId() != mapWallsId
+            && (cell.getTile().getId() != mapLangwithBarriersId || hasEnteredLangwith)));
     }
 
     @Override

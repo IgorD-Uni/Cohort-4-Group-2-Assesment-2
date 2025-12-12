@@ -56,6 +56,10 @@ public class Main extends Game{
 
         buttonSkin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
+        LeaderboardManager.getInstance().load();
+
+        this.setScreen(new MainMenuScreen(this));
+
         this.setScreen(new MainMenuScreen(this));
     }
 

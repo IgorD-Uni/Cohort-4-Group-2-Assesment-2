@@ -26,9 +26,12 @@ public class MainMenuScreen implements Screen {
     private Stage stage;
     private Skin skin;
     private final GlyphLayout layout = new GlyphLayout();
+    private Texture backgroundTexture;
+
 
     private TextButton playButton;
     private TextButton exitButton;
+    private TextButton leaderboardButton;
 
     private com.badlogic.gdx.InputProcessor previousInputProcessor; // used to restore on hide()
 
@@ -55,23 +58,30 @@ public class MainMenuScreen implements Screen {
         // Prefer shared skin from game (do NOT dispose it later)
         skin = game.buttonSkin;
 
+        backgroundTexture = new Texture(Gdx.files.internal("mainMenuBackground.png"));
+
 
         // build UI
         setupUI();
+
+
     }
     /**
      *Add required UI elements to stage
      */
     private void setupUI() {
         playButton = createButton("Play");
+        leaderboardButton = createButton("Leaderboard");   // NEW
         exitButton = createButton("Exit");
 
         stage.addActor(playButton);
+        stage.addActor(leaderboardButton);   // NEW
         stage.addActor(exitButton);
 
-        positionButtons();
+        positionButtonsUsingTable();
         addListeners();
     }
+
 
     /**
      * Set up each button
@@ -94,9 +104,35 @@ public class MainMenuScreen implements Screen {
         float w = stage.getViewport().getWorldWidth();
         float h = stage.getViewport().getWorldHeight();
 
-        playButton.setPosition((w - playButton.getWidth()) / 2f, h / 2f );
+        playButton.setPosition((w - playButton.getWidth()) / 2f, h / 2f + 120);
+        leaderboardButton.setPosition((w - leaderboardButton.getWidth()) / 2f, h / 2f); // NEW
         exitButton.setPosition((w - exitButton.getWidth()) / 2f, h / 2f - 120);
     }
+
+    private void positionButtonsUsingTable() {
+        com.badlogic.gdx.scenes.scene2d.ui.Table table = new com.badlogic.gdx.scenes.scene2d.ui.Table();
+        table.setFillParent(true);
+        table.top(); // align table to top
+        table.padTop(200f); // push table down from the top; adjust value as needed
+
+        stage.addActor(table);
+
+        float buttonWidth = 250f;  // smaller width
+        float buttonHeight = 80f;  // smaller height
+        float buttonPad = 15f;     // padding between buttons
+
+        // First row: Play and Leaderboard side by side
+        table.add(playButton).width(buttonWidth).height(buttonHeight).pad(buttonPad);
+        table.add(leaderboardButton).width(buttonWidth).height(buttonHeight).pad(buttonPad);
+        table.row(); // move to next row
+
+        // Second row: Exit button centered
+        table.add(exitButton).colspan(2).width(buttonWidth).height(buttonHeight).pad(buttonPad);
+    }
+
+
+
+
     /**
      * Add listeners for button functionality
      */
@@ -104,35 +140,62 @@ public class MainMenuScreen implements Screen {
         Color normalColor = new Color(0.0f, 0.95f, 0.95f, 1f);
         Color clickColor = new Color(0.4f, 1f, 1f, 1f);
 
+        // ---- PLAY BUTTON ----
         playButton.addListener(new ClickListener() {
-            private boolean clicked = false;
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (clicked) return;
-                clicked = true;
                 playButton.setColor(clickColor);
                 Gdx.app.postRunnable(() -> game.setScreen(new CharacterSelectScreen(game)));
             }
+
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 playButton.setColor(clickColor);
             }
+
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 playButton.setColor(normalColor);
             }
         });
 
+        // ---- LEADERBOARD BUTTON ----
+        leaderboardButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                leaderboardButton.setColor(clickColor);
+                Gdx.app.postRunnable(() ->
+                    game.setScreen(new LeaderboardScreen(
+                        game,
+                        () -> game.setScreen(new MainMenuScreen(game))   // back button action
+                    ))
+                );
+            }
+
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                leaderboardButton.setColor(clickColor);
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                leaderboardButton.setColor(normalColor);
+            }
+        });
+
+        // ---- EXIT BUTTON ----
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 exitButton.setColor(clickColor);
                 Gdx.app.postRunnable(Gdx.app::exit);
             }
+
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 exitButton.setColor(clickColor);
             }
+
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 exitButton.setColor(normalColor);
@@ -140,36 +203,45 @@ public class MainMenuScreen implements Screen {
         });
     }
 
+
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
 
         // update stage
-        if (stage != null) {
-            stage.act(delta);
-        }
+        if (stage != null) stage.act(delta);
 
-        // Draw background + title using game's batch (aligned to stage camera)
+        // get width and height once
+        float w = (stage != null) ? stage.getViewport().getWorldWidth() : game.viewport.getWorldWidth();
+        float h = (stage != null) ? stage.getViewport().getWorldHeight() : game.viewport.getWorldHeight();
+
+        // set the projection matrix for batch
         if (stage != null) {
             game.batch.setProjectionMatrix(stage.getCamera().combined);
         } else {
             game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
         }
 
+        // draw everything with batch
         game.batch.begin();
-        float w = (stage != null) ? stage.getViewport().getWorldWidth() : game.viewport.getWorldWidth();
-        float h = (stage != null) ? stage.getViewport().getWorldHeight() : game.viewport.getWorldHeight();
 
-        float brightness = 0.85f + 0.15f * (float) Math.sin(TimeUtils.millis() / 500f);
+        // draw background
+        if (backgroundTexture != null) {
+            game.batch.draw(backgroundTexture, 0, 0, w, h);
+        }
+
+        // draw title
+        /* float brightness = 0.85f + 0.15f * (float) Math.sin(TimeUtils.millis() / 500f);
         if (game.menuFont != null) {
             game.menuFont.setColor(brightness, brightness, brightness, 1f);
             layout.setText(game.menuFont, TITLE_TEXT);
             game.menuFont.draw(game.batch, TITLE_TEXT, (w - layout.width) / 2f, h * 0.82f);
             game.menuFont.setColor(Color.WHITE);
-        }
+        } */
 
         game.batch.end();
 
+        // draw the stage (buttons)
         if (stage != null) stage.draw();
 
         // allow quick keyboard start (space)
@@ -209,6 +281,12 @@ public class MainMenuScreen implements Screen {
             stage.dispose();
             stage = null;
         }
+
+        if (backgroundTexture != null) {
+            backgroundTexture.dispose();
+            backgroundTexture = null;
+        }
+
 
 
         // DO NOT dispose game.menuFont or game.buttonSkin or game.batch here
