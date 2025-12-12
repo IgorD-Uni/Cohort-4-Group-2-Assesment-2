@@ -1,0 +1,25 @@
+name: Code Quality Checks
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+  
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+  
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+  
+      - name: Run Gradle check
+        run: ./gradlew check

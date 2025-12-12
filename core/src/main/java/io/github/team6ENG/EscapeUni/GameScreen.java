@@ -820,6 +820,10 @@ public class GameScreen implements Screen {
         return "";
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     //David Modifications - losing game on basis losing health or time up (bus gone)
     public void gameOver(){
         gameoverTrigger = true;
