@@ -12,7 +12,7 @@ public class Dean extends SpriteAnimations {
     public float deanX;
     public float deanY;
     public float speed;
-    public float normalSpeed = 0.75F;
+    public float normalSpeed = 0.25F;
     private boolean paused = false;
     private float pauseTimer = 0.0F;
     private float pathFindTimer = 0.0F;
@@ -92,10 +92,10 @@ public class Dean extends SpriteAnimations {
         this.canSee = this.lineOfSight(deanTileX, deanTileY, playerTileX, playerTileY);
 
         if (this.canSee) {
-            this.speed = 1.0F;
+            this.speed = 0.5F;
             this.pathFinding(delta, playerCentreX, playerCentreY);
         } else if (distance >= 10.0F) {
-            this.speed = 0.80F;
+            this.speed = 0.25F;
             this.pathFinding(delta, playerCentreX, playerCentreY);
         } else if (distance < 10.0F) {
             this.speed = 0.6F;

@@ -27,6 +27,8 @@ public class GameOverScreen implements Screen {
     private Skin skin;
     private final GlyphLayout layout = new GlyphLayout();
 
+    private final int finalScore;
+
     private TextButton mainMenuButton;
     private TextButton exitButton;
 
@@ -34,32 +36,31 @@ public class GameOverScreen implements Screen {
 
     private static String titleText ;
 
+
     /**
      * Initialise game over screen
      * @param game Current instance of Main
      * @param deathMessage reason of death to display on screen
      */
-    public GameOverScreen(final Main game, String deathMessage) {
+    public GameOverScreen(final Main game, String deathMessage,int finalScore) {
         this.game = game;
         this.titleText = deathMessage;
+        this.finalScore = finalScore; // will be 0 if failed
         // DO NOT initialize stage/input here — do it in show()
     }
 
     @Override
     public void show() {
-        // create stage with a fixed virtual size (you used 800x450)
         stage = new Stage(game.viewport);
 
-        // remember previous input processor so we can restore it later
         previousInputProcessor = Gdx.input.getInputProcessor();
         Gdx.input.setInputProcessor(stage);
 
-        // Prefer shared skin from game (do NOT dispose it later)
         skin = game.buttonSkin;
-
-        // build UI
         setupUI();
+
     }
+
     /**
      *Add required UI elements to stage
      */
@@ -73,6 +74,8 @@ public class GameOverScreen implements Screen {
         positionButtons();
         addListeners();
     }
+
+
     /**
      * Set up each button
      * @param text buttons display text

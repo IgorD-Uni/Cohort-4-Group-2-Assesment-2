@@ -105,7 +105,7 @@ public class RonCookeScreen implements Screen {
         if(!isPaused) {
             game.gameTimer -= delta;
             if(game.gameTimer < 0){
-                gameScreen.gameOver();
+                gameScreen.gameOver((int) game.score);
                 return;
             }
             speechTimer += delta;
