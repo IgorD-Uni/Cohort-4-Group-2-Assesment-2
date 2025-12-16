@@ -211,11 +211,11 @@ public class GameScreen implements Screen {
         items.put("torch", new Collectable(game, "items/torch.png",   300, 220, 0.1f, false, "RonCookeScreen", audioManager));
         items.put("pizza", new Collectable(game, "items/pizza.png", 600, 100, 0.4f, true, "LangwithScreen", audioManager));
         items.put("phone", new Collectable(game, "items/phone.png", 100, 100, 0.05f, true, "LangwithScreen", audioManager));
-        items.put("shield", new Collectable(game, "items/shield.png", 960, 1200, 0.1f, true, "GameScreen", audioManager));
-        items.put("healthBoost", new Collectable(game, "items/healthBoost.png", 920, 1200, 0.1f, true, "GameScreen", audioManager));
-        items.put("healthBoost2", new Collectable(game, "items/healthBoost.png", 520, 1500, 0.1f, true, "GameScreen", audioManager));
-        items.put("beer", new Collectable(game, "items/beerIcon.png", 500, 800, 0.1f, true, "GameScreen", audioManager));
-        items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 250, 300, 0.1f, true, "GameScreen", audioManager));
+        items.put("shield", new Collectable(game, "items/shield.png", 960, 1150, 0.2f, true, "GameScreen", audioManager));
+        items.put("healthBoost", new Collectable(game, "items/healthBoost.png", 900, 1200, 0.2f, true, "GameScreen", audioManager));
+        items.put("healthBoost2", new Collectable(game, "items/healthBoost.png", 520, 1500, 0.2f, true, "GameScreen", audioManager));
+        items.put("beer", new Collectable(game, "items/beerIcon.png", 480, 800, 0.1f, true, "GameScreen", audioManager));
+        items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 900, 1250, 0.1f, true, "GameScreen", audioManager));
     }
     private void initialiseBus() {
         busTexture = new Texture(Gdx.files.internal("images/bus.png"));
@@ -272,19 +272,11 @@ public class GameScreen implements Screen {
             player.sprite.setY(busY);
             Gdx.gl.glClearColor(0, 0, 0, Math.min(1, (busX - 1500) / 300f));
 
-            if (busX < 950) {
+            if (busX < 950 && !gameoverTrigger) {
                 final int finalScore = Math.max(0, (int) game.score);
-                Gdx.app.postRunnable(() -> {
-                    game.setScreen(new GameOverNamePrompt(game, finalScore, name -> {
-                        LeaderboardManager.getInstance().addScore(name, finalScore);
-                        // Now go to WinScreen (you likely have a WinScreen that shows congratulations)
-                        game.setScreen(new WinScreen(game));
-                    }));
-                });
-                Gdx.app.postRunnable(() -> game.setScreen(
-                    new WinScreen(game)
-                ));
+                gameOver(finalScore);
             }
+
         }
         lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
 
@@ -513,15 +505,14 @@ public class GameScreen implements Screen {
 
         } // End isPaused
 
-        // If time up
-        if(!gameoverTrigger && game.gameTimer <= 0) {
-           gameOver();
-           return;
-        }
-        //David Modifications - End game
-        if (healthSystem.isDead()) {
-            gameOver();
-            return;
+        if (!gameoverTrigger) {
+            if (healthSystem.isDead()) {
+                gameOver(0); // Dead = 0 score
+                return;
+            } else if (game.gameTimer <= 0) {
+                gameOver((int) game.score); // Time ran out
+                return;
+            }
         }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
@@ -825,32 +816,34 @@ public class GameScreen implements Screen {
     }
 
     //David Modifications - losing game on basis losing health or time up (bus gone)
-    public void gameOver(){
+    public void gameOver(int finalScore) {
+        if (gameoverTrigger) return; // immediately exit if already triggered
         gameoverTrigger = true;
+
         audioManager.stopMusic();
         audioManager.stopFootsteps();
 
-        // final score: use remaining (rounded) seconds from game.score or game.gameTimer
-        final int finalScore = Math.max(0, (int) game.score);
+        final String message = healthSystem.isDead()
+                ? "You lost all your health, better luck next time"
+                : "Sorry you missed the bus, better luck next time";
 
         Gdx.app.postRunnable(() -> {
-            game.setScreen(new GameOverNamePrompt(game, finalScore, name -> {
-                // Save name + score
-                LeaderboardManager.getInstance().addScore(name, finalScore);
+            game.setScreen(new GameOverNamePrompt(
+                    game,
+                    finalScore,
+                    name -> {
+                        LeaderboardManager.getInstance().addScore(name, finalScore);
 
-                // Then show standard Game Over screen (existing one)
-                game.setScreen(new GameOverScreen(game, "Sorry you missed the bus, better luck next time"));
-            }));
+                        game.setScreen(new GameOverScreen(
+                                game,
+                                message,
+                                finalScore
+                        ));
+                    }
+            ));
         });
-
-
-        String message = (healthSystem.isDead())
-            ? "You lost all your health, better luck next time"
-            : "Sorry you missed the bus, better luck next time";
-        Gdx.app.postRunnable(() -> game.setScreen(
-            new GameOverScreen(game, message)
-        ));
     }
+
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
