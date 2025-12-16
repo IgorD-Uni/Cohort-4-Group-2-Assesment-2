@@ -57,7 +57,7 @@ public class BuildingManager {
         this.player = player;
         this.ronCookeTrigger = new Rectangle(350, 455, 50, 50);
         this.langwithTrigger = new Rectangle(1078, 1215, 50, 50);
-        this.specialEventTrigger = new Rectangle(1000, 1215, 50, 50);
+        this.specialEventTrigger = new Rectangle(800, 800, 50, 50);
 
         this.audioManager = audioManager;
     }

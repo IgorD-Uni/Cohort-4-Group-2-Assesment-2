@@ -274,9 +274,17 @@ public class GameScreen implements Screen {
 
             if (busX < 950 && !gameoverTrigger) {
                 final int finalScore = Math.max(0, (int) game.score);
-                gameOver(finalScore);
+                Gdx.app.postRunnable(() -> {
+                    game.setScreen(new GameOverNamePrompt(game, finalScore, name -> {
+                        LeaderboardManager.getInstance().addScore(name, finalScore);
+                        // Now go to WinScreen (you likely have a WinScreen that shows congratulations)
+                        game.setScreen(new WinScreen(game));
+                    }));
+                });
+                Gdx.app.postRunnable(() -> game.setScreen(
+                    new WinScreen(game)
+                ));
             }
-
         }
         lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
 
@@ -513,6 +521,11 @@ public class GameScreen implements Screen {
                 gameOver((int) game.score); // Time ran out
                 return;
             }
+        }
+        //David Modifications - End game
+        if (healthSystem.isDead()) {
+            gameOver();
+            return;
         }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) {
@@ -816,8 +829,7 @@ public class GameScreen implements Screen {
     }
 
     //David Modifications - losing game on basis losing health or time up (bus gone)
-    public void gameOver(int finalScore) {
-        if (gameoverTrigger) return; // immediately exit if already triggered
+    public void gameOver(){
         gameoverTrigger = true;
 
         audioManager.stopMusic();
@@ -842,8 +854,15 @@ public class GameScreen implements Screen {
                     }
             ));
         });
-    }
 
+
+        String message = (healthSystem.isDead())
+            ? "You lost all your health, better luck next time"
+            : "Sorry you missed the bus, better luck next time";
+        Gdx.app.postRunnable(() -> game.setScreen(
+            new GameOverScreen(game, message)
+        ));
+    }
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
