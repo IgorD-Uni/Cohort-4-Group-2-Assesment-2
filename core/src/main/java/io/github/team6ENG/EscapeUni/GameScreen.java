@@ -51,17 +51,19 @@ public class GameScreen implements Screen {
     float stateTime;
     private Rectangle stealTorchTrigger;
 
-    // Negative event timers
-    private float beerTimer = 0f;
-    private float pizzaTimer = 0f;
-
-    // Negative event flagsF
+    // Beer event
     private boolean beerActive = false;
-    private boolean pizzaActive = false;
-
-    // Control mapping for pizza effect
-    private boolean controlsRotated = false;
+    private float beerTimer = 0f;
     private boolean isScreenFlipped = false;
+    private float beerMessageTimer = 0f;
+
+    // Rotten pizza effect
+    private boolean foodPoisoned = false;
+    private float foodPoisonTimer = 0f;
+    private float foodPoisonMessageTimer = 0f;
+    private Texture whitePixel; // for the green overlay
+
+
     Dean dean;
 
 
@@ -206,7 +208,7 @@ public class GameScreen implements Screen {
     private void initialiseItems() {
         int playerX = 940;
         int playerY = 1215;
-        items.put("gooseFood", new Collectable(game, "items/gooseFood.png",   500, 1500, 0.03f, true, "GameScreen", audioManager));
+        items.put("gooseFood", new Collectable(game, "items/gooseFood.png",   400, 1475, 0.03f, true, "GameScreen", audioManager));
         items.put("keyCard", new Collectable(game, game.activeUniIDPath,   300, 200, 0.05f, false, "RonCookeScreen", audioManager));
         items.put("torch", new Collectable(game, "items/torch.png",   300, 220, 0.1f, false, "RonCookeScreen", audioManager));
         items.put("pizza", new Collectable(game, "items/pizza.png", 600, 100, 0.4f, true, "LangwithScreen", audioManager));
@@ -215,7 +217,7 @@ public class GameScreen implements Screen {
         items.put("healthBoost", new Collectable(game, "items/healthBoost.png", 900, 1200, 0.2f, true, "GameScreen", audioManager));
         items.put("healthBoost2", new Collectable(game, "items/healthBoost.png", 520, 1500, 0.2f, true, "GameScreen", audioManager));
         items.put("beer", new Collectable(game, "items/beerIcon.png", 480, 800, 0.1f, true, "GameScreen", audioManager));
-        items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 900, 1250, 0.1f, true, "GameScreen", audioManager));
+        items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 600, 1250, 0.1f, true, "GameScreen", audioManager));
     }
     private void initialiseBus() {
         busTexture = new Texture(Gdx.files.internal("images/bus.png"));
@@ -291,6 +293,7 @@ public class GameScreen implements Screen {
             // Update negative event timers
             if (beerActive) {
                 beerTimer -= delta;
+                beerMessageTimer -= delta;
                 if (beerTimer <= 0) {
                     beerActive = false;
                     isScreenFlipped = false; // reset screen flip
@@ -298,11 +301,15 @@ public class GameScreen implements Screen {
             }
 
 
-            if (pizzaActive) {
-                pizzaTimer -= delta;
-                if (pizzaTimer <= 0) {
-                    pizzaActive = false;
-                    controlsRotated = false; // reset controls
+            if (foodPoisoned) {
+                foodPoisonTimer -= delta;
+                foodPoisonMessageTimer -= delta;
+
+                playerSpeedModifier = 0.5f;
+
+                if (foodPoisonTimer <= 0f) {
+                    foodPoisoned = false;
+                    playerSpeedModifier = 1f;
                 }
             }
 
@@ -367,20 +374,23 @@ public class GameScreen implements Screen {
                         // === NEGATIVE EVENTS ===
                         if (key.equals("beer")) {
                             beerActive = true;
-                            beerTimer = 30f; // 30 seconds
+                            beerTimer = 15f; // 15 seconds
                             isScreenFlipped = true; // activate screen flip
+                            beerMessageTimer = 4f; // show message for 4 seconds
                             game.foundNegativeEvents += 1;
                         }
 
 
-                        if (key.equals("pizza")) {
-                            pizzaActive = true;
-                            pizzaTimer = 30f; // 30 seconds
-                            controlsRotated = true; // flag for rotated controls
+                        if (key.equals("rottenPizza")) {
+                            foodPoisoned = true;
+                            foodPoisonTimer = 15f; // 15 seconds
+                            foodPoisonMessageTimer = 4f; // show message for 4 seconds
                             game.foundNegativeEvents += 1;
                         }
                         // ======================
 
+
+                        // === POSITIVE EVENTS ===
                         isEPressed = false;
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
@@ -405,6 +415,8 @@ public class GameScreen implements Screen {
                         }
 
                         isEPressed = false;
+
+                        // ======================
 
                     }
                 }
@@ -586,6 +598,11 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        whitePixel = new Texture(pixmap);
+        pixmap.dispose();
     }
 
     /**
@@ -670,6 +687,69 @@ public class GameScreen implements Screen {
         }
 
         game.batch.end();
+
+        // ---- DRUNK EVENT OVERLAY ----
+        if (beerActive) {
+            game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+            game.batch.begin();
+
+            String drunkMessage = "Woaah - you're drunk!";
+            GlyphLayout layout = new GlyphLayout(game.menuFont, drunkMessage);
+            float baseX = (game.viewport.getWorldWidth() - layout.width) / 2f;
+            float baseY = game.viewport.getWorldHeight() * 0.75f;
+            float waveAmplitude = 5f;
+            float time = stateTime * 5f;
+
+            for (int i = 0; i < drunkMessage.length(); i++) {
+                char c = drunkMessage.charAt(i);
+                float offsetY = (float) Math.sin(time + i * 0.5f) * waveAmplitude;
+                game.menuFont.draw(game.batch, String.valueOf(c), baseX + i * 14, baseY + offsetY);
+            }
+
+            game.batch.end();
+        }
+
+
+        // ---- FOOD POISONING OVERLAY ----
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+
+        if (foodPoisoned) {
+            game.batch.begin();
+            float fadeOutDuration = 2f; // last 2 seconds fade out
+            float alpha = 0.35f;
+
+            if (foodPoisonTimer < fadeOutDuration) {
+                alpha = 0.35f * (foodPoisonTimer / fadeOutDuration);
+            }
+
+            game.batch.setColor(0f, 0.4f, 0f, alpha);
+
+            game.batch.draw(
+                    whitePixel,
+                    0, 0,
+                    game.viewport.getWorldWidth(),
+                    game.viewport.getWorldHeight()
+            );
+            game.batch.setColor(Color.WHITE);
+            game.batch.end();
+        }
+
+        if (foodPoisonMessageTimer > 0f) {
+            game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+            game.batch.begin();
+            game.menuFont.draw(
+                    game.batch,
+                    "Oh no! You've got food poisoning!",
+                    game.viewport.getWorldWidth() / 2f - 220,
+                    game.viewport.getWorldHeight() * 0.75f
+
+            );
+            game.batch.end();
+
+        }
+
+
+
 
         if (isScreenFlipped) {
             camera.up.set(0, -1, 0); // flip camera vertically
@@ -916,5 +996,6 @@ public class GameScreen implements Screen {
         if (dean != null) {
             dean.dispose();
         }
+        if (whitePixel != null) whitePixel.dispose();
     }
 }
