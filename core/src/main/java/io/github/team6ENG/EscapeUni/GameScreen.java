@@ -51,6 +51,7 @@ public class GameScreen implements Screen {
     float stateTime;
     private Rectangle stealTorchTrigger;
 
+
     // Beer event
     private boolean beerActive = false;
     private float beerTimer = 0f;
@@ -94,6 +95,10 @@ public class GameScreen implements Screen {
     private HealthSystem healthSystem;
     private ShapeRenderer shapeRenderer;
 
+    //Achievements
+    public Achievements achievements;
+
+
     /**
      * Initialise the game elements
      * @param game - Instance of Main
@@ -121,6 +126,9 @@ public class GameScreen implements Screen {
         initialiseHealth();
 
         buildingManager = new BuildingManager(game, this, player, audioManager);
+
+        achievements = new Achievements(game, game.menuFont, game.gameFont);
+
         stateTime = 0f;
     }
 
@@ -363,6 +371,27 @@ public class GameScreen implements Screen {
                 trail = trail.baby;
             }
 
+            //Checking for achievements
+            achievements.update(delta);
+
+            // 1. Finding all hidden events
+            if (achievements != null && game != null) {
+                achievements.update(delta);
+
+                try {
+                    if (game.foundHiddenEvents == game.totalHiddenEvents) {
+                        achievements.unlock("Hidden Master");
+                    }
+                } catch (Exception e) {
+                    Gdx.app.error("Achievements", "Error unlocking achievement", e);
+                }
+            }
+
+
+            // 2. Going Swimming
+
+            // 3. Speedy Finish (after game over)
+
             // Check if player can pick up items, David modifications include shield and health boost items, and their conditionals
             for(String key: items.keySet()){
                 Collectable item = items.get(key);
@@ -419,6 +448,7 @@ public class GameScreen implements Screen {
                         // ======================
 
                     }
+
                 }
             }
 
@@ -746,6 +776,7 @@ public class GameScreen implements Screen {
             );
             game.batch.end();
 
+
         }
 
 
@@ -762,6 +793,13 @@ public class GameScreen implements Screen {
         healthSystem.render(shapeRenderer, camera);
 
         renderUI();
+
+        game.batch.begin();
+            if (achievements != null) {
+                achievements.render(game.batch, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
+            }
+        game.batch.end();
+
 
 
     }
