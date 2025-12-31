@@ -22,19 +22,22 @@ public class Main extends Game{
     public String activeSpritePath;
     public String activeUniIDPath;
 
+    public float totalGameTime; // store total time at start
     public float gameTimer = 300;
     public float score = 300;
 
     public float gameVolume = .5f;
     public float musicVolume = .5f;
 
-    public final int totalNegativeEvents = 1;
-    public final int totalPositiveEvents = 1;
-    public final int totalHiddenEvents = 1;
+    public final int totalNegativeEvents = 5;
+    public final int totalPositiveEvents = 3;
+    public final int totalHiddenEvents = 3;
 
     public int foundNegativeEvents = 0;
     public int foundPositiveEvents = 0;
     public int foundHiddenEvents = 0;
+
+    public Achievements achievements;
     /**
      * Initialise global game variables
      */
@@ -55,7 +58,7 @@ public class Main extends Game{
         gameFont.setColor(Color.valueOf("4287f5FF"));
 
         buttonSkin = new Skin(Gdx.files.internal("skins/uiskin.json"));
-
+        achievements = new Achievements(this, menuFont, menuFont);
         LeaderboardManager.getInstance().load();
 
         this.setScreen(new MainMenuScreen(this));
@@ -111,5 +114,6 @@ public class Main extends Game{
         if (batch != null) {
             batch.dispose();
         }
+        achievements = null;
     }
 }

@@ -21,6 +21,7 @@ public class AudioManager {
     private final Sound impact;
     private final Sound quack;
     private final Sound thunder;
+    private final Sound waterSplash;
 
 
     /**
@@ -41,6 +42,7 @@ public class AudioManager {
         impact = Gdx.audio.newSound(Gdx.files.internal("soundEffects/Impact.mp3"));
         quack = Gdx.audio.newSound(Gdx.files.internal("soundEffects/Quack.mp3"));
         thunder =  Gdx.audio.newSound(Gdx.files.internal("soundEffects/Thunder.mp3"));
+        waterSplash = Gdx.audio.newSound(Gdx.files.internal("soundEffects/waterSplash.mp3"));
 
         playMusic();
     }
@@ -73,6 +75,8 @@ public class AudioManager {
     public void stopFootsteps(){
         footSteps.stop();
     }
+    public void playWaterSplash() {waterSplash.play(game.gameVolume);}
+
 
     public void playDungeonMusic(){
         musicDungeon.setVolume(0.02f);
@@ -103,6 +107,9 @@ public class AudioManager {
         }
         if (honk != null) {
             honk.dispose();
+        }
+        if (waterSplash != null) {
+            waterSplash.dispose();
         }
     }
 }
