@@ -33,6 +33,11 @@ public class Player extends SpriteAnimations{
     public boolean hasEnteredLangwith;
     private AudioManager audioManager;
     boolean isFootsteps = false;
+
+    // for triggering the "going swimming" achievement
+    public boolean hasEnteredWaterOnce = false;
+
+
     /**
      * Initialises the player and its animations
      * @param g current instance of Main
@@ -133,12 +138,17 @@ public class Player extends SpriteAnimations{
         }
     }
 
-    private void checkIfInWater(TiledMapTileLayer.Cell cell){
-        if( cell != null && cell.getTile().getId() == mapWaterId){
+    private void checkIfInWater(TiledMapTileLayer.Cell cell) {
+        boolean wasInWater = inWater;
+
+        if (cell != null && cell.getTile().getId() == mapWaterId) {
             inWater = true;
 
-        }
-        else{
+            // FIRST time entering water
+            if (!wasInWater && !hasEnteredWaterOnce) {
+                hasEnteredWaterOnce = true;
+            }
+        } else {
             inWater = false;
         }
     }

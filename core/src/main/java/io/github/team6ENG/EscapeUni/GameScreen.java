@@ -64,9 +64,7 @@ public class GameScreen implements Screen {
     private float foodPoisonMessageTimer = 0f;
     private Texture whitePixel; // for the green overlay
 
-
     Dean dean;
-
 
     public boolean hasTorch = false;
     private boolean isTorchOn = false;
@@ -127,9 +125,12 @@ public class GameScreen implements Screen {
 
         buildingManager = new BuildingManager(game, this, player, audioManager);
 
-        achievements = new Achievements(game, game.menuFont, game.gameFont);
+        achievements = game.achievements;
 
         stateTime = 0f;
+
+        game.totalGameTime = game.gameTimer; // save starting timer
+
     }
 
     /**
@@ -205,8 +206,6 @@ public class GameScreen implements Screen {
         lighting.isVisible("playerNoTorch", false);
         lighting.isVisible("gooseTorch", false);
         lighting.isVisible("gooseNoTorch", false);
-
-
     }
 
     /**
@@ -234,7 +233,6 @@ public class GameScreen implements Screen {
     }
     private  void initialiseAudio() {
         audioManager = new AudioManager(game);
-
     }
     //David modifications
     private void initialiseHealth() {
@@ -284,7 +282,7 @@ public class GameScreen implements Screen {
 
             if (busX < 950 && !gameoverTrigger) {
                 final int finalScore = Math.max(0, (int) game.score);
-                gameOver(finalScore);
+                winGame(finalScore);
             }
 
         }
@@ -308,7 +306,6 @@ public class GameScreen implements Screen {
                 }
             }
 
-
             if (foodPoisoned) {
                 foodPoisonTimer -= delta;
                 foodPoisonMessageTimer -= delta;
@@ -321,12 +318,8 @@ public class GameScreen implements Screen {
                 }
             }
 
-
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
-
-
-
 
             // Update light positions
             lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
@@ -387,10 +380,11 @@ public class GameScreen implements Screen {
                 }
             }
 
-
             // 2. Going Swimming
-
-            // 3. Speedy Finish (after game over)
+            if (player.hasEnteredWaterOnce && !achievements.isUnlocked("Going Swimming")) {
+                audioManager.playWaterSplash();
+                achievements.unlock("Going Swimming");
+            }
 
             // Check if player can pick up items, David modifications include shield and health boost items, and their conditionals
             for(String key: items.keySet()){
@@ -549,10 +543,10 @@ public class GameScreen implements Screen {
 
         if (!gameoverTrigger) {
             if (healthSystem.isDead()) {
-                gameOver(0); // Dead = 0 score
+                loseGame(); // Dead = 0 score
                 return;
             } else if (game.gameTimer <= 0) {
-                gameOver((int) game.score); // Time ran out
+                loseGame(); // Time ran out
                 return;
             }
         }
@@ -625,7 +619,6 @@ public class GameScreen implements Screen {
         camera.update();
 }
 
-
     @Override
     public void show() {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -673,9 +666,7 @@ public class GameScreen implements Screen {
         while (trail.baby != null){
             trail = trail.baby;
             if (trail.currentGooseFrame != null) {
-
                 game.batch.draw(trail.currentGooseFrame, trail.x, trail.y, 16f, 16f);
-
             }
 
         }
@@ -775,12 +766,7 @@ public class GameScreen implements Screen {
 
             );
             game.batch.end();
-
-
         }
-
-
-
 
         if (isScreenFlipped) {
             camera.up.set(0, -1, 0); // flip camera vertically
@@ -799,8 +785,6 @@ public class GameScreen implements Screen {
                 achievements.render(game.batch, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
             }
         game.batch.end();
-
-
 
     }
     Random random = new Random();
@@ -821,7 +805,6 @@ public class GameScreen implements Screen {
         if(Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             isEPressed = true;
         }
-
 
         // Toggle the torch with click
         if(Gdx.input.justTouched() && hasTorch){
@@ -934,16 +917,41 @@ public class GameScreen implements Screen {
     }
 
     //David Modifications - losing game on basis losing health or time up (bus gone)
-    public void gameOver(int finalScore) {
-        if (gameoverTrigger) return; // immediately exit if already triggered
+    public void loseGame() {
+        if (gameoverTrigger) return;
         gameoverTrigger = true;
 
         audioManager.stopMusic();
         audioManager.stopFootsteps();
 
-        final String message = healthSystem.isDead()
-                ? "You lost all your health, better luck next time"
-                : "Sorry you missed the bus, better luck next time";
+        Gdx.app.postRunnable(() -> {
+            game.setScreen(new GameOverNamePrompt(
+                    game,
+                    0,
+                    name -> {
+                        LeaderboardManager.getInstance().addScore(name, 0);
+                        game.setScreen(new GameOverScreen(
+                                game,
+                                "Sorry you missed the bus, better luck next time",
+                                0
+                        ));
+                    }
+            ));
+        });
+    }
+
+    public void winGame(int finalScore) {
+        if (gameoverTrigger) return;
+        gameoverTrigger = true;
+
+        audioManager.stopMusic();
+        audioManager.stopFootsteps();
+
+        // Speedy Finish achievement
+        float elapsedTime = game.totalGameTime - game.gameTimer;
+        if (elapsedTime <= 170f) {
+            achievements.unlock("Speedy Finish");
+        }
 
         Gdx.app.postRunnable(() -> {
             game.setScreen(new GameOverNamePrompt(
@@ -951,16 +959,15 @@ public class GameScreen implements Screen {
                     finalScore,
                     name -> {
                         LeaderboardManager.getInstance().addScore(name, finalScore);
-
-                        game.setScreen(new GameOverScreen(
+                        game.setScreen(new LeaderboardScreen(
                                 game,
-                                message,
-                                finalScore
+                                () -> game.setScreen(new MainMenuScreen(game))
                         ));
                     }
             ));
         });
     }
+
 
 
     /**
@@ -975,7 +982,6 @@ public class GameScreen implements Screen {
         font.setColor(colour);
         font.draw(game.batch, text, x, y);
     }
-
 
     @Override
     public void resize(int width, int height) {
@@ -1014,7 +1020,6 @@ public class GameScreen implements Screen {
         if (lighting != null) {
             lighting.dispose();
         }
-
 
         if (mapRenderer != null) {
             mapRenderer.dispose();

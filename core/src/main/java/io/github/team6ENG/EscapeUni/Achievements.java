@@ -10,7 +10,7 @@ public class Achievements {
 
     private final Main game;
 
-    private class Achievement {
+    public class Achievement {
         String name;
         boolean unlocked;
         float displayTimer; // for showing in middle of screen temporarily
@@ -24,7 +24,7 @@ public class Achievements {
         }
     }
 
-    private Array<Achievement> achievements = new Array<>();
+    public Array<Achievement> achievements = new Array<>();
     private BitmapFont fontLarge;
     private BitmapFont fontSmall;
 
@@ -37,6 +37,10 @@ public class Achievements {
         achievements.add(new Achievement("Hidden Master", 15)); // finding all hidden events
         achievements.add(new Achievement("Going Swimming", 0));  // whale in water
         achievements.add(new Achievement("Speedy Finish", 50));  // finishing <2.5 min
+    }
+
+    public Array<Achievement> getAll() {
+        return achievements;
     }
 
     // Unlock achievement by name
@@ -88,7 +92,7 @@ public class Achievements {
         fontSmall.setColor(Color.GOLD);
         fontSmall.draw(batch, titleLayout, titleX, titleY);
 
-        float spacing = 80f; // space between each achievement
+        float spacing = 25f; // space between each achievement
         float offsetBelowTitle = 20f; // extra gap between title and first achievement
 
         for (int i = 0; i < achievements.size; i++) {
