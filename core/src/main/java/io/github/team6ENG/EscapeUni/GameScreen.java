@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 //David Modifications
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Array;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -63,6 +64,18 @@ public class GameScreen implements Screen {
     private float foodPoisonTimer = 0f;
     private float foodPoisonMessageTimer = 0f;
     private Texture whitePixel; // for the green overlay
+
+    // Bell Event
+    private boolean bellActive = false;
+    private float bellDuration = 10f; // seconds the students stay active
+    private float bellTimer = 0f;
+
+    private Array<Student> bellStudents = new Array<>(); // Array of students
+    private Texture studentTexture;
+
+    // Student bell event UI
+    private float bellMessageTimer = 0f;
+    private boolean bellEventCounted = false;
 
     Dean dean;
 
@@ -225,6 +238,7 @@ public class GameScreen implements Screen {
         items.put("healthBoost2", new Collectable(game, "items/healthBoost.png", 520, 1500, 0.2f, true, "GameScreen", audioManager));
         items.put("beer", new Collectable(game, "items/beerIcon.png", 480, 800, 0.1f, true, "GameScreen", audioManager));
         items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 600, 1250, 0.1f, true, "GameScreen", audioManager));
+        items.put("bell", new Collectable(game,"items/bell.png",480,600,0.03f,true,"GameScreen", audioManager));
     }
     private void initialiseBus() {
         busTexture = new Texture(Gdx.files.internal("images/bus.png"));
@@ -318,6 +332,37 @@ public class GameScreen implements Screen {
                 }
             }
 
+            // Student crowd event
+            if (bellActive) {
+                bellTimer -= delta;
+
+                if (bellMessageTimer > 0f) {
+                    bellMessageTimer -= delta;
+                }
+
+                // Update students
+                for (Student s : bellStudents) {
+                    s.update(delta);
+
+                    // Check collision with player
+                    Rectangle playerBounds = new Rectangle(
+                            player.sprite.getX(), player.sprite.getY(),
+                            player.sprite.getWidth(), player.sprite.getHeight()
+                    );
+
+                    if (playerBounds.overlaps(s.getBounds())) {
+                        playerSpeedModifier = 0.5f; // slow player on touch
+                    }
+                }
+
+                if (bellTimer <= 0f) {
+                    bellActive = false;
+                    bellStudents.clear();
+                    playerSpeedModifier = 1f; // reset speed
+                }
+            }
+
+
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
@@ -395,6 +440,7 @@ public class GameScreen implements Screen {
                         numOfInventoryItems += 1;
 
                         // === NEGATIVE EVENTS ===
+                        // "tipsy" event
                         if (key.equals("beer")) {
                             beerActive = true;
                             beerTimer = 15f; // 15 seconds
@@ -403,13 +449,47 @@ public class GameScreen implements Screen {
                             game.foundNegativeEvents += 1;
                         }
 
-
+                        // "food poisoning" event
                         if (key.equals("rottenPizza")) {
                             foodPoisoned = true;
                             foodPoisonTimer = 15f; // 15 seconds
                             foodPoisonMessageTimer = 4f; // show message for 4 seconds
                             game.foundNegativeEvents += 1;
                         }
+
+                        // "student crowd" event
+                        // STUDENT CROWD EVENT (TEST SPAWN ONLY)
+                        if (key.equals("bell")) {bellActive = true;
+                            bellActive = true;
+                            bellTimer = 8f;
+                            bellMessageTimer = 4f;   // show warning for 4 seconds
+                            bellEventCounted = true;
+                            game.foundNegativeEvents += 1;
+                            audioManager.playBellSound();
+                            bellStudents.clear();
+
+                            float baseX = player.sprite.getX();
+                            float baseY = player.sprite.getY();
+
+                            float spacing = 40f;
+                            float speed = 90f;
+
+                            // ===== TOP LANE (walk LEFT) =====
+                            for (int i = 0; i < 8; i++) {
+                                float x = baseX + 300 + i * spacing;   // spawn to the right
+                                float y = baseY + 40;
+                                bellStudents.add(new Student(x, y, speed, -1));
+                            }
+
+                            // ===== BOTTOM LANE (walk RIGHT) =====
+                            for (int i = 0; i < 8; i++) {
+                                float x = baseX - 300 - i * spacing;   // spawn to the left
+                                float y = baseY - 40;
+                                bellStudents.add(new Student(x, y, speed, +1));
+                            }
+
+                        }
+
                         // ======================
 
 
@@ -427,10 +507,12 @@ public class GameScreen implements Screen {
                             hasShield = true;
                             item.Collect();
                             numOfInventoryItems += 1;
+                            game.foundPositiveEvents += 1;
                         }
                         else if (key.startsWith("healthBoost")){
                             healthSystem.heal(25f);
                             item.isVisible = false;
+                            game.foundPositiveEvents += 1;
                         }
                         else {
                             item.Collect();
@@ -626,6 +708,11 @@ public class GameScreen implements Screen {
         pixmap.fill();
         whitePixel = new Texture(pixmap);
         pixmap.dispose();
+
+        studentTexture = new Texture(Gdx.files.internal("sprites/student.png"));
+        shapeRenderer = new ShapeRenderer();
+
+
     }
 
     /**
@@ -709,7 +796,7 @@ public class GameScreen implements Screen {
 
         game.batch.end();
 
-        // ---- DRUNK EVENT OVERLAY ----
+        // ---- TIPSY EVENT OVERLAY ----
         if (beerActive) {
             game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
             game.batch.begin();
@@ -729,7 +816,6 @@ public class GameScreen implements Screen {
 
             game.batch.end();
         }
-
 
         // ---- FOOD POISONING OVERLAY ----
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
@@ -765,8 +851,11 @@ public class GameScreen implements Screen {
                     game.viewport.getWorldHeight() * 0.75f
 
             );
+
+
             game.batch.end();
         }
+
 
         if (isScreenFlipped) {
             camera.up.set(0, -1, 0); // flip camera vertically
@@ -774,6 +863,46 @@ public class GameScreen implements Screen {
             camera.up.set(0, 1, 0);  // normal
         }
         camera.update();
+
+        // ---- STUDENT CROWD EVENT ----
+        if (bellActive) {
+            game.batch.setProjectionMatrix(camera.combined);
+            game.batch.begin();
+            game.batch.setColor(Color.WHITE);
+
+            for (Student s : bellStudents) {
+                game.batch.draw(studentTexture, s.x, s.y, s.width, s.height);
+            }
+
+            game.batch.end();
+
+            if (bellMessageTimer > 0f) {
+                game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+                game.batch.begin();
+
+                // Grey overlay
+                game.batch.setColor(0.3f, 0.3f, 0.3f, 0.35f);
+                game.batch.draw(
+                        whitePixel,
+                        0, 0,
+                        game.viewport.getWorldWidth(),
+                        game.viewport.getWorldHeight()
+                );
+                game.batch.setColor(Color.WHITE);
+
+                // Warning text
+                String msg = "Oh no! You're being swarmed by students!\n"
+                        + "Watch out or they'll slow you down!";
+
+                GlyphLayout layout = new GlyphLayout(game.menuFont, msg);
+                float x = (game.viewport.getWorldWidth() - layout.width) / 2f;
+                float y = game.viewport.getWorldHeight() * 0.75f;
+
+                game.menuFont.draw(game.batch, msg, x, y);
+
+                game.batch.end();
+            }
+        }
 
         //David Modifications
         healthSystem.render(shapeRenderer, camera);
@@ -910,6 +1039,7 @@ public class GameScreen implements Screen {
             }
         }
         return "";
+
     }
 
     public Player getPlayer() {
@@ -950,7 +1080,7 @@ public class GameScreen implements Screen {
         // Speedy Finish achievement
         float elapsedTime = game.totalGameTime - game.gameTimer;
         if (elapsedTime <= 170f) {
-            achievements.unlock("Speedy Finish");
+            achievements.unlock("Sfpeedy Finish");
         }
 
         Gdx.app.postRunnable(() -> {
@@ -967,8 +1097,6 @@ public class GameScreen implements Screen {
             ));
         });
     }
-
-
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
@@ -1040,5 +1168,7 @@ public class GameScreen implements Screen {
             dean.dispose();
         }
         if (whitePixel != null) whitePixel.dispose();
+
+
     }
 }

@@ -22,7 +22,7 @@ public class AudioManager {
     private final Sound quack;
     private final Sound thunder;
     private final Sound waterSplash;
-
+    private Sound bellSound;
 
     /**
      * Initialised audio manager
@@ -43,6 +43,7 @@ public class AudioManager {
         quack = Gdx.audio.newSound(Gdx.files.internal("soundEffects/Quack.mp3"));
         thunder =  Gdx.audio.newSound(Gdx.files.internal("soundEffects/Thunder.mp3"));
         waterSplash = Gdx.audio.newSound(Gdx.files.internal("soundEffects/waterSplash.mp3"));
+        bellSound = Gdx.audio.newSound(Gdx.files.internal("soundEffects/schoolBell.mp3"));
 
         playMusic();
     }
@@ -76,6 +77,7 @@ public class AudioManager {
         footSteps.stop();
     }
     public void playWaterSplash() {waterSplash.play(game.gameVolume);}
+    public void playBellSound() {bellSound.play(game.gameVolume);}
 
 
     public void playDungeonMusic(){
@@ -110,6 +112,10 @@ public class AudioManager {
         }
         if (waterSplash != null) {
             waterSplash.dispose();
+        }
+
+        if (bellSound != null){
+            bellSound.dispose();
         }
     }
 }

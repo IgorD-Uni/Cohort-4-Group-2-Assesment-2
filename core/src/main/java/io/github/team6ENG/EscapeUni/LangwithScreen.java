@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.graphics.Texture;
 
 /**
  * Represents the interior of the Ron Cooke building.
@@ -23,6 +24,7 @@ public class LangwithScreen implements Screen {
     private Player player;
     private float stateTime;
     private float pizzaText = 0;
+    private Texture background;
 
     float worldWidth;
     float worldHeight ;
@@ -36,6 +38,8 @@ public class LangwithScreen implements Screen {
         this.gameScreen = gameScreen;
         this.font = game.menuFont;
         this.smallFont = game.gameFont;
+        background = new Texture(Gdx.files.internal("langwithBedroom.png"));
+
         initialisePlayer((int) 60,(int) game.viewport.getWorldHeight()/2);
         stateTime = 0;
     }
@@ -52,7 +56,6 @@ public class LangwithScreen implements Screen {
 
     }
 
-
     @Override
     public void render(float delta) {
         // Clear to black
@@ -63,9 +66,17 @@ public class LangwithScreen implements Screen {
             player.handleInput(delta, gameScreen.playerSpeedModifier);
             player.updatePlayer(stateTime);
         }
+
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
         game.batch.begin();
 
+        game.batch.draw(
+                background, 0, 0, game.viewport.getWorldWidth(), game.viewport.getWorldHeight()
+        );
+
+        // draw player on top
         player.sprite.draw(game.batch);
+
 
         worldWidth = game.viewport.getWorldWidth();
         worldHeight = game.viewport.getWorldHeight();
@@ -197,5 +208,9 @@ public class LangwithScreen implements Screen {
         isPaused = false;
     }
     @Override public void hide() {}
-    @Override public void dispose() {}
+    @Override public void dispose() {
+        if (background != null) {
+            background.dispose();
+        }
+    }
 }

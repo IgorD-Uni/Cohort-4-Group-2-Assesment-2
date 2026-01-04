@@ -27,6 +27,7 @@ public class RonCookeScreen implements Screen {
     private Player player;
     private Image receptionist;
     private float stateTime;
+    private Texture background;
 
     float worldWidth;
     float worldHeight ;
@@ -42,6 +43,7 @@ public class RonCookeScreen implements Screen {
         this.gameScreen = gameScreen;
         this.font = game.menuFont;
         this.smallFont = game.gameFont;
+        background = new Texture(Gdx.files.internal("ronCookeHubBackground.png"));
 
         initialisePlayer((int) game.viewport.getWorldWidth()/2,(int) game.viewport.getWorldHeight()/2);
         initialiseReceptionist();
@@ -73,55 +75,126 @@ public class RonCookeScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Clear to black
+        // Clear screen to black
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        if(!isPaused) {
+
+        if (!isPaused) {
             player.handleInput(delta, gameScreen.playerSpeedModifier);
             player.updatePlayer(stateTime);
-        }
-        game.batch.begin();
-
-        player.sprite.draw(game.batch);
-        receptionist.draw(game.batch,1);
-
-        worldWidth = game.viewport.getWorldWidth();
-        worldHeight = game.viewport.getWorldHeight();
-
-
-        for(String key: gameScreen.items.keySet()){
-            Collectable item = gameScreen.items.get(key);
-            if(item.isVisible && !item.playerHas && item.originScreen.equals("RonCookeScreen")){
-                item.img.draw(game.batch, 1);
-                if (item.checkInRange(player.sprite.getX()- (player.sprite.getHeight()/2) , player.sprite.getY() - (player.sprite.getHeight()/2)) && isEPressed){
-                    item.Collect();
-                    isEPressed = false;
-
-                }
-            }
-        }
-        game.batch.end();
-        renderUI();
-        if(!isPaused) {
             game.gameTimer -= delta;
-            if(game.gameTimer < 0){
+            if (game.gameTimer < 0) {
                 gameScreen.loseGame();
                 return;
             }
             speechTimer += delta;
+            stateTime += delta;
+            isEPressed = Gdx.input.isKeyJustPressed(Input.Keys.E);
+
             if (gameScreen.items.get("keyCard").playerHas && gameScreen.items.get("torch").playerHas) {
                 buildingManager.update(delta);
             }
-            stateTime += delta;
-            isEPressed = Gdx.input.isKeyJustPressed(Input.Keys.E);
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
                 isPaused = true;
                 game.setScreen(new PauseScreen(game, this, buildingManager.audioManager));
-
             }
         }
+
+        // Update world dimensions
+        worldWidth = game.viewport.getWorldWidth();
+        worldHeight = game.viewport.getWorldHeight();
+
+        // Start batch for all drawing
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+        game.batch.begin();
+
+        // Draw background
+        game.batch.draw(background, 0, 0, worldWidth, worldHeight);
+
+        // Draw player and receptionist
+        player.sprite.draw(game.batch);
+        receptionist.draw(game.batch, 1);
+
+        // Draw items on the floor (not yet collected)
+        for (String key : gameScreen.items.keySet()) {
+            Collectable item = gameScreen.items.get(key);
+            if (item.isVisible && !item.playerHas && item.originScreen.equals("RonCookeScreen")) {
+                item.img.draw(game.batch, 1);
+                if (item.checkInRange(player.sprite.getX() - (player.sprite.getHeight() / 2),
+                        player.sprite.getY() - (player.sprite.getHeight() / 2)) && isEPressed) {
+                    item.Collect();
+                    isEPressed = false;
+                }
+            }
+        }
+
+        // Draw UI: inventory items
+        float itemXPos = (worldWidth - (gameScreen.numOfInventoryItems * 32)) / 2;
+        String instructions = "";
+        for (String key : gameScreen.items.keySet()) {
+            Collectable item = gameScreen.items.get(key);
+            if (item.playerHas) {
+                item.img.setPosition(itemXPos, worldHeight * 0.8f);
+                item.img.draw(game.batch, 1);
+                itemXPos += 32;
+            } else if (item.originScreen.equals("RonCookeScreen") && item.isVisible &&
+                    item.checkInRange(player.sprite.getX() - 32, player.sprite.getY() - (player.sprite.getHeight() / 2))) {
+                if (instructions.isEmpty()) {
+                    instructions = "Press 'e' to collect " + key;
+                }
+            }
+        }
+
+        // Draw game stats and instructions
+        float y = worldHeight - 20f;
+        float lineSpacing = 15f;
+        drawText(smallFont, "Negative Events: " + game.foundNegativeEvents + "/" + game.totalNegativeEvents, Color.WHITE, 20, y);
+        y -= lineSpacing;
+        drawText(smallFont, "Positive Events: " + game.foundPositiveEvents + "/" + game.totalPositiveEvents, Color.WHITE, 20, y);
+        y -= lineSpacing;
+        drawText(smallFont, "Hidden Events: " + game.foundHiddenEvents + "/" + game.totalHiddenEvents, Color.WHITE, 20, y);
+        y -= lineSpacing;
+
+        layout.setText(game.menuFont, instructions);
+        float textX = (worldWidth - layout.width) / 2;
+        drawText(font, instructions, Color.WHITE, textX, worldHeight * 0.75f);
+
+        // Timer display (2-digit seconds)
+        drawText(font, ((int) game.gameTimer / 60 + ":" + ((int) game.gameTimer % 60 < 10 ? "0" : "") + (int) game.gameTimer % 60),
+                Color.WHITE, worldWidth - 80f, worldHeight - 20f);
+
+        // Score display
+        layout.setText(game.menuFont, "Score: " + (int) game.score);
+        drawText(font, "Score: " + (int) game.score, Color.WHITE, (worldWidth - layout.width) / 2, worldHeight - 20f);
+
+        // Speech / key card logic
+        if (!speech.isEmpty()) {
+            font.draw(game.batch, speech.get(0), worldWidth * 0.1f, worldHeight * 0.8f);
+            if (speechTimer >= 3) {
+                speechTimer = 0;
+                speech.remove(0);
+            }
+        } else {
+            gameScreen.items.get("keyCard").isVisible = true;
+            gameScreen.items.get("keyCard").x = worldWidth * 0.3f;
+            gameScreen.items.get("keyCard").y = worldHeight * 0.4f;
+
+            gameScreen.items.get("torch").isVisible = true;
+            gameScreen.items.get("torch").x = worldWidth * 0.3f;
+            gameScreen.items.get("torch").y = worldHeight * 0.45f;
+
+            if (gameScreen.items.get("keyCard").playerHas) {
+                font.setColor(Color.GRAY);
+                String exitText = "Press G to leave";
+                GlyphLayout exitLayout = new GlyphLayout(font, exitText);
+                font.draw(game.batch, exitText, (worldWidth - exitLayout.width) / 2, worldHeight - 50);
+            }
+        }
+
+        game.batch.end();
     }
+
 
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls

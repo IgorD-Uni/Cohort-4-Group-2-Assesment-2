@@ -30,7 +30,7 @@ public class Main extends Game{
     public float musicVolume = .5f;
 
     public final int totalNegativeEvents = 5;
-    public final int totalPositiveEvents = 3;
+    public final int totalPositiveEvents = 4;
     public final int totalHiddenEvents = 3;
 
     public int foundNegativeEvents = 0;
