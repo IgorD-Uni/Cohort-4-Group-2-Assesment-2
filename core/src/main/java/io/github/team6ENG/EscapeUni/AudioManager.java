@@ -58,7 +58,7 @@ public class AudioManager {
         impact.play(game.gameVolume);
     }
     public void playRumble(){
-        rumble.play(game.gameVolume);
+        rumble.play(game.gameVolume*0.05f);
     }
     public void playHonk(){
         honk.play(game.gameVolume);
@@ -81,7 +81,7 @@ public class AudioManager {
 
 
     public void playDungeonMusic(){
-        musicDungeon.setVolume(0.02f);
+        musicDungeon.setVolume(0.01f);
         musicDungeon.play();
         musicDungeon.setLooping(true);
     }

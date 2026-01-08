@@ -57,7 +57,7 @@ public class BuildingManager {
         this.player = player;
         this.ronCookeTrigger = new Rectangle(350, 455, 50, 50);
         this.langwithTrigger = new Rectangle(1078, 1215, 50, 50);
-        this.specialEventTrigger = new Rectangle(800, 800, 50, 50);
+        this.specialEventTrigger = new Rectangle(1350, 150, 50, 50);
 
         this.audioManager = audioManager;
     }
@@ -141,11 +141,6 @@ public class BuildingManager {
         inRonCooke = true;
         gameScreen.audioManager.stopFootsteps();
         game.setScreen(new RonCookeScreen(game, this, gameScreen));
-        gameScreen.isDark = true;
-        gameScreen.hasTorch = true;
-        gameScreen.lighting.isVisible("playerNoTorch", true);
-        gameScreen.lighting.isVisible("gooseNoTorch", true);
-
     }
     /**
      * Enters the Langwith College.

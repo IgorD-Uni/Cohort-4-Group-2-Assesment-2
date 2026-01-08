@@ -35,8 +35,6 @@ public class GameScreen implements Screen {
 
     private OrthographicCamera camera;
     private TiledMapTileLayer collisionLayer;
-    public Lighting lighting;
-    public boolean isDark = false;
 
     private boolean isPaused = false;
     private boolean isEPressed = false;
@@ -51,6 +49,10 @@ public class GameScreen implements Screen {
     Goose goose = new Goose();
     float stateTime;
     private Rectangle stealTorchTrigger;
+
+    //Secret event entrance
+
+    private Texture duckStatue = new Texture("images/Duck-statue.png");
 
 
     // Beer event
@@ -79,15 +81,13 @@ public class GameScreen implements Screen {
 
     Dean dean;
 
-    public boolean hasTorch = false;
-    private boolean isTorchOn = false;
     private boolean isCamOnGoose = false;
     private boolean hasGooseFood = false;
     private boolean gameoverTrigger = false;
     private boolean gooseStolenTorch = false;
 
     private final float probabilityOfHonk = 1000;
-    //David Modifications
+    //David Modifications (Assesment 2)
     private boolean hasShield = false;
 
     public final HashMap<String, Collectable> items = new HashMap<String, Collectable>();
@@ -102,7 +102,7 @@ public class GameScreen implements Screen {
     public float playerSpeedModifier = 1;
 
     public AudioManager audioManager;
-    //David Modifications
+    //David Modifications (Assesment 2)
     private HealthSystem healthSystem;
     private ShapeRenderer shapeRenderer;
 
@@ -121,11 +121,11 @@ public class GameScreen implements Screen {
 
         initialiseAudio();
 
-        initialisePlayer(940,1215);
+        initialisePlayer(940,1215); //Starting position x:940 , y:1215
 
         initialiseCamera();
 
-        initialiseLighting();
+        // Assesment 2 (remove lighting function)
 
         initialiseGoose(100,100);
 
@@ -133,7 +133,7 @@ public class GameScreen implements Screen {
 
         initialiseBus();
 
-        //David Modifications
+        //David Modifications (Assesment 2)
         initialiseHealth();
 
         buildingManager = new BuildingManager(game, this, player, audioManager);
@@ -196,30 +196,7 @@ public class GameScreen implements Screen {
     /**
     * Add and hide light circles for player and goose
      */
-    private void initialiseLighting() {
-        int mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
-        int mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
-        lighting = new Lighting(mapWidth, mapHeight);
-
-        lighting.addLightSource("playerTorch",
-            player.sprite.getX() + (player.sprite.getWidth() / 2),
-            player.sprite.getY() + (player.sprite.getHeight() / 2),
-            new Color(0, 0, 0, 0),
-            50);
-        lighting.addLightSource("playerNoTorch",
-            player.sprite.getX() + (player.sprite.getWidth() / 2),
-            player.sprite.getY() + (player.sprite.getHeight() / 2),
-            new Color(0, 0, 0, 0.4f),
-            12);
-        lighting.addLightSource("gooseTorch",goose.x+ (goose.getWidth() / 2), goose.y + (goose.getHeight() / 2), new Color(1,0.2f,0.1f,0.4f), 30);
-        lighting.addLightSource("gooseNoTorch",goose.x+ (goose.getWidth() / 2), goose.y + (goose.getHeight() / 2), new Color(0, 0, 0, 0.4f), 10);
-
-        lighting.isVisible("playerTorch", false);
-        lighting.isVisible("playerNoTorch", false);
-        lighting.isVisible("gooseTorch", false);
-        lighting.isVisible("gooseNoTorch", false);
-    }
 
     /**
      * Load collectable items into items class
@@ -273,7 +250,6 @@ public class GameScreen implements Screen {
             if (distance < 50f) {
                 playerOnBus = true;
                 isPaused = true;
-                hasTorch = false;
                 //player.sprite.setAlpha(0f);
                 game.gameFont.setColor(Color.BLUE);
                 game.gameFont.getData().setScale(2f);
@@ -287,8 +263,6 @@ public class GameScreen implements Screen {
             audioManager.stopMusic();
             busLeaving = true;
             busX -= 80 * delta;
-            lighting.isVisible("playerTorch", true);
-            lighting.isVisible("playerNoTorch", false);
 
             player.sprite.setX(busX);
             player.sprite.setY(busY);
@@ -300,7 +274,6 @@ public class GameScreen implements Screen {
             }
 
         }
-        lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
 
         if(!isPaused && !busLeaving) {
             updateCamera();
@@ -366,15 +339,8 @@ public class GameScreen implements Screen {
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
-            // Update light positions
-            lighting.updateLightSource("playerTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
-            lighting.updateLightSource("playerNoTorch", player.sprite.getX() + (player.sprite.getWidth() / 2), player.sprite.getY() + (player.sprite.getHeight() / 2));
-            lighting.updateLightSource("gooseNoTorch", goose.x+ (goose.getWidth() / 2), goose.y + (goose.getHeight() / 2));
 
-            if(gooseStolenTorch){
-                lighting.updateLightSource("gooseTorch", goose.x+ (goose.getWidth() / 2), goose.y + (goose.getHeight() / 2));
 
-            }
 
             player.updatePlayer(stateTime);
             if(player.isMoving && !player.isFootsteps){
@@ -569,51 +535,7 @@ public class GameScreen implements Screen {
                 dean.update(stateTime, delta, player, healthSystem);
             }
 
-            if(hasTorch || gooseStolenTorch){
-                Rectangle playerRect = new Rectangle(
-                    player.sprite.getX(),
-                    player.sprite.getY(),
-                    player.sprite.getWidth(),
-                    player.sprite.getHeight()
-                );
 
-                if(playerRect.overlaps(stealTorchTrigger) && !goose.attackModeActivated){
-                    goose.attackMode();
-                    audioManager.playHonk();
-
-                }
-                else if(goose.attackModeActivated){
-                    Rectangle gooseRect = new Rectangle( goose.x,goose.y,goose.getWidth(),goose.getHeight());
-                    if(playerRect.overlaps(gooseRect) && !gooseStolenTorch){
-                        gooseStolenTorch = true;
-                        isCamOnGoose = true;
-                        hasTorch = false;
-                        game.foundNegativeEvents += 1;
-                        lighting.isVisible("gooseTorch", true);
-                        lighting.isVisible("gooseNoTorch", false);
-                        lighting.isVisible("playerTorch", false);
-                        lighting.isVisible("playerNoTorch", true);
-                        audioManager.playHonk();
-
-                    }
-                    else if(!playerRect.overlaps(stealTorchTrigger) &&playerRect.overlaps(gooseRect) && gooseStolenTorch){
-
-                        isCamOnGoose = false;
-                        lighting.isVisible("gooseTorch", false);
-                        lighting.isVisible("gooseNoTorch", true);
-                        lighting.isVisible("playerTorch", true);
-                        lighting.isVisible("playerNoTorch", false);
-
-
-                        if(!goose.isSleeping && !hasTorch){
-                            game.score += 100;
-                        }
-
-                        hasTorch = true;
-                    }
-                }
-
-            }
 
             // Keep sprites in map boundary
             player.sprite.setX(Math.max(0, Math.min(player.sprite.getX(), mapWidth - player.sprite.getWidth())));
@@ -742,10 +664,12 @@ public class GameScreen implements Screen {
 
         game.batch.draw(goose.currentGooseFrame, goose.x, goose.y);
 
-        //David Modifications
+        //David Modifications (Assesment 2)
         if (dean != null) {
             dean.render(game.batch);
         }
+
+
 
         //Draw yellow baby geese
         game.batch.setColor(Color.YELLOW);
@@ -782,17 +706,15 @@ public class GameScreen implements Screen {
             }
 
         }
-        if(hasTorch){
-            player.torch.draw(game.batch, 1);
-        }
+
+
+        //Draw secret event entrance
+        game.batch.draw(duckStatue, 1275,100, 200,200);
 
         game.batch.draw(busTexture, busX, busY, 100, 60);
         int mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
         int mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
-        if(isDark) {
-            game.batch.draw(lighting.render(camera, mapWidth, mapHeight), 0, 0);
-        }
 
         game.batch.end();
 
@@ -864,7 +786,7 @@ public class GameScreen implements Screen {
         }
         camera.update();
 
-        // ---- STUDENT CROWD EVENT ----
+        // ---- STUDENT CROWD EVENT ----(Assesment 2)
         if (bellActive) {
             game.batch.setProjectionMatrix(camera.combined);
             game.batch.begin();
@@ -904,7 +826,7 @@ public class GameScreen implements Screen {
             }
         }
 
-        //David Modifications
+        //David Modifications (Assesment 2)
         healthSystem.render(shapeRenderer, camera);
 
         renderUI();
@@ -934,14 +856,6 @@ public class GameScreen implements Screen {
         if(Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             isEPressed = true;
         }
-
-        // Toggle the torch with click
-        if(Gdx.input.justTouched() && hasTorch){
-            isTorchOn = !isTorchOn;
-            lighting.isVisible("playerTorch", isTorchOn);
-            audioManager.playTorch();
-        }
-
     }
 
     /**
@@ -979,12 +893,9 @@ public class GameScreen implements Screen {
         //Draw instructions
         GlyphLayout layout = new GlyphLayout(game.menuFont, instructions);
         float textX = (worldWidth - layout.width) / 2;
-        if(isDark){
-            drawText(bigFont, instructions,Color.WHITE, textX, worldHeight* 0.75f);
 
-        }else {
-            drawText(bigFont, instructions, Color.BLACK, textX, worldHeight * 0.75f);
-        }
+        drawText(bigFont, instructions, Color.BLACK, textX, worldHeight * 0.75f);
+
 
         float y = worldHeight - 20f;
         float lineSpacing = 15f;
@@ -1002,14 +913,8 @@ public class GameScreen implements Screen {
         drawText(bigFont, ("Score: " +(int)game.score), Color.WHITE, (worldWidth - layout.width)/2, worldHeight-20f);
 
 
-        if(gooseStolenTorch && !hasTorch){
-            layout = new GlyphLayout(game.menuFont, "THE GOOSE STOLE YOUR TORCH\nCATCH IT QUICK!!!");
-            drawText(bigFont, "THE GOOSE STOLE YOUR TORCH\nCATCH IT QUICK!!!", Color.RED, (worldWidth -layout.width)/2, worldHeight-80f);
-        }
+
         // Game instructions
-        if(hasTorch) {
-            drawText(bigFont, "Left click to switch on torch", Color.ORANGE, 20, 80);
-        }
         drawText(bigFont, "Press 'p' to pause", Color.WHITE, 20, 55);
         drawText(bigFont, "Use Arrow Keys or WASD to move", Color.WHITE, 20, 30);
 
@@ -1144,9 +1049,6 @@ public class GameScreen implements Screen {
 
         if (map != null) {
             map.dispose();
-        }
-        if (lighting != null) {
-            lighting.dispose();
         }
 
         if (mapRenderer != null) {

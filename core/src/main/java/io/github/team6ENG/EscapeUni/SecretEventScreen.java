@@ -18,6 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import org.w3c.dom.Text;
 
+
+// Adding secret event - Long Boi dungeon  (Assesment 2)
 public class SecretEventScreen implements Screen {
 
     private Texture map;
@@ -26,11 +28,10 @@ public class SecretEventScreen implements Screen {
     private final Main game;
     private final BuildingManager buildingManager;
     private final GameScreen gameScreen;  // keep reference to return
-    private final BitmapFont font;
-    private final BitmapFont smallFont;
+
+
     private Player player;
     private float stateTime;
-    private float pizzaText = 0;
 
     float worldWidth;
     float worldHeight;
@@ -38,7 +39,6 @@ public class SecretEventScreen implements Screen {
     private float pauseTimer;
 
     private OrthographicCamera camera;
-    private boolean isEPressed = false;
     private boolean isPaused = false;
     private boolean previous =false;
     private boolean didImpact =false;
@@ -46,14 +46,12 @@ public class SecretEventScreen implements Screen {
 
     private boolean didThunder =false;
 
-    private ShapeRenderer shapeRenderer;
+    private Texture textIMG = new Texture("images/TEXTspecial.png");
 
     public SecretEventScreen(Main game, BuildingManager buildingManager, GameScreen gameScreen) {
         this.game = game;
         this.buildingManager = buildingManager;
         this.gameScreen = gameScreen;
-        this.font = game.menuFont;
-        this.smallFont = game.gameFont;
         initialisePlayer((int) 60, (int) game.viewport.getWorldHeight() / 2);
         stateTime = 0;
 
@@ -63,7 +61,6 @@ public class SecretEventScreen implements Screen {
 
         LongBoi = new Texture("sprites/LongBoi.png");
         pauseTimer = 0;
-        shapeRenderer = new ShapeRenderer();
     }
 
     private void initialisePlayer(int x, int y) {
@@ -139,14 +136,14 @@ public class SecretEventScreen implements Screen {
 
         }
 
-        if (pauseTimer >= 24){
+        if (pauseTimer >= 14){
             if (!didQuack){
                 gameScreen.audioManager.playQuack();
                 didQuack = true;
             }
         }
 
-        if (didQuack && pauseTimer >= 25.5) {
+        if (didQuack && pauseTimer >= 16.5) {
             if (!didThunder) {
                 gameScreen.audioManager.playThunder();
                 didThunder = true;
@@ -154,9 +151,15 @@ public class SecretEventScreen implements Screen {
             }
             Gdx.gl.glClearColor(0, 0, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+            game.batch.begin();
+            game.batch.draw(textIMG, 1250, 150, 642, 200 );
+            game.batch.end();
 
-            if (pauseTimer>=28){
-                gameScreen.getPlayer().sprite.setPosition(200,200);
+
+            if (pauseTimer>=20){
+
+
+                gameScreen.getPlayer().sprite.setPosition(1320,1170);
                 buildingManager.exitBuilding();
             }
             return;
@@ -178,7 +181,7 @@ public class SecretEventScreen implements Screen {
 
         buildingManager.update(pauseTimer);
         stateTime += delta;
-        isEPressed = Gdx.input.isKeyJustPressed(Input.Keys.E);
+
 
 
 
@@ -198,19 +201,7 @@ public class SecretEventScreen implements Screen {
 
 
     private void animation(float delta){
-        camera.translate(15*delta,0,0);
-    }
-
-    private void renderFade(float delta) {
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(255,255,255, (0+(0.01f*delta)));
-        shapeRenderer.rect(0, 0, camera.viewportWidth, camera.viewportHeight);
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
+        camera.translate(35*delta,0,0);
     }
 
 
