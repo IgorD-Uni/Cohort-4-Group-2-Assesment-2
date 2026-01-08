@@ -1,9 +1,13 @@
 fonts/menuScreenFont.fnt
 fonts/menuScreenFont.png
+images/Duck-Statue.png
+images/TEXTspecial.png
 images/bus.png
 images/femaleSpriteImg.png
 images/maleSpriteImg.png
 items/beerIcon.png
+items/bell.png
+items/cross.png
 items/duckStatue.png
 items/gooseFood.png
 items/healthBoost.png
@@ -13,8 +17,12 @@ items/phone.png
 items/pizza.png
 items/rottenPizzaIcon.png
 items/shield.png
+items/tick.png
 items/torch.png
+langwithBedroom.png
+leaderboard.json
 mainMenuBackground.png
+ronCookeHubBackground.png
 skins/default.fnt
 skins/default.png
 skins/uiskin.atlas
@@ -28,8 +36,10 @@ soundEffects/dungeon.mp3
 soundEffects/footsteps.mp3
 soundEffects/honk.mp3
 soundEffects/music.mp3
+soundEffects/schoolBell.mp3
 soundEffects/stone_falling.mp3
 soundEffects/tap.mp3
+soundEffects/waterSplash.mp3
 soundEffects/wrong.mp3
 sprites/LongBoi.png
 sprites/dean.png
@@ -37,6 +47,7 @@ sprites/femaleSprite.png
 sprites/goose.png
 sprites/maleSprite.png
 sprites/receptionist.png
+sprites/student.png
 tileMap/boundaryTiles.xml
 tileMap/dungeon.png
 tileMap/dungeon.tmx
