@@ -190,15 +190,16 @@ public class Goose extends SpriteAnimations {
                 }
             }
 
-            if(isFlying) {
-                if (isFacingLeft) {
+            if(isFlying){
+                if(isFacingLeft){
                     currentGooseFrame = animations.get("flyLeft").getKeyFrame(stateTime, true);
-                } else {
+                }
+                else{
                     currentGooseFrame = animations.get("flyRight").getKeyFrame(stateTime, true);
                 }
             }
             else{
-                if(isFacingLeft) {
+                if(isFacingLeft){
                     currentGooseFrame = animations.get("walkLeft").getKeyFrame(stateTime, true);
                 }
                 else{
