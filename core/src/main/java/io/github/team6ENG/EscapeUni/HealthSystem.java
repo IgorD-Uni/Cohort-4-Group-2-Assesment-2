@@ -8,6 +8,8 @@ public class HealthSystem {
     private float health;
     private boolean isInvincible;
     private float invincibleTimer;
+    private boolean isHit = false;
+    private float hitTimer = 0.0f;
 
     //Health initialised at 100 for start game
     public HealthSystem() {
@@ -24,6 +26,13 @@ public class HealthSystem {
                 isInvincible = false;
             }
         }
+        //Player hit time to pause goose movement
+        if (isHit) {
+            hitTimer -= delta;
+            if (hitTimer <= 0) {
+                isHit = false;
+            }
+        }
     }
 
     public float getHealth() {
@@ -35,6 +44,8 @@ public class HealthSystem {
         if (!isInvincible) {
             health -= amount;
             if (health < 0) health = 0;
+            isHit = true;
+            hitTimer = 2.0f;
         }
     }
 
@@ -51,6 +62,8 @@ public class HealthSystem {
     public boolean isInvincible() {
         return isInvincible;
     }
+
+    public boolean isHit() {return isHit;}
 
     public boolean isDead() {
         return health <= 0;
