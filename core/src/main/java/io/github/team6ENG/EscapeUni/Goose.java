@@ -145,58 +145,63 @@ public class Goose extends SpriteAnimations {
             }
 
         }
-        else {
+        else{
             isFlying = false;
             if (x > followX) {
                 isFacingLeft = true;
 
-                if ((!isMoveAllowed(tileX - 1, tileY) && Math.abs(x - followX) > 50) || !isMoveAllowed(tileX, tileY)) {
+                if ((!isMoveAllowed(tileX-1,tileY) && Math.abs(x-followX) > 50)|| !isMoveAllowed(tileX,tileY)) {
                     isFlying = true;
                     x -= speed;
-                } else if (isMoveAllowed(tileX - 1, tileY)) {
+                }
+                else if (isMoveAllowed(tileX-1,tileY)){
 
                     x -= speed;
                 }
-            } else if (x <= followX - 5) {
+            }
+            else if(x <= followX -5) {
                 isFacingLeft = false;
-                if ((!isMoveAllowed(tileX + 1, tileY) && Math.abs(x - followX) > 50) || !isMoveAllowed(tileX, tileY)) {
+                if ( (!isMoveAllowed(tileX+1,tileY)&& Math.abs(x-followX) > 50) || !isMoveAllowed(tileX,tileY)){
                     isFlying = true;
                     x += speed;
-                } else if (isMoveAllowed(tileX + 1, tileY)) {
+                }
+                else if(isMoveAllowed(tileX+1,tileY)){
 
                     x += speed;
                 }
             }
 
-            if (y > followY + 5) {
-                if ((!isMoveAllowed(tileX, tileY - 1) && Math.abs(y - followY) > 50) || !isMoveAllowed(tileX, tileY)) {
+            if(y > followY +5 ) {
+                if ((!isMoveAllowed(tileX,tileY-1)&& Math.abs(y-followY) > 50)|| !isMoveAllowed(tileX,tileY)) {
                     isFlying = true;
-                    y -= speed;
-                } else if (isMoveAllowed(tileX, tileY - 1)) {
                     y -= speed;
                 }
-            } else if (y <= followY - 5) {
-                if ((!isMoveAllowed(tileX, tileY + 1) && Math.abs(y - followY) > 50) || !isMoveAllowed(tileX, tileY)) {
+                else if(isMoveAllowed(tileX, tileY-1)){
+                    y-=speed;
+                }
+            }
+            else if (y <= followY -5 ) {
+                if((!isMoveAllowed(tileX ,tileY+1)&& Math.abs(y-followY) > 50)|| !isMoveAllowed(tileX,tileY)){
                     isFlying = true;
                     y += speed;
-                } else if (isMoveAllowed(tileX, tileY + 1)) {
-
+                }
+                else if(isMoveAllowed(tileX ,tileY+1)){
                     y += speed;
                 }
             }
 
-            if (isFlying) {
+            if(isFlying) {
                 if (isFacingLeft) {
                     currentGooseFrame = animations.get("flyLeft").getKeyFrame(stateTime, true);
-
                 } else {
                     currentGooseFrame = animations.get("flyRight").getKeyFrame(stateTime, true);
                 }
-            } else {
-                if (isFacingLeft) {
+            }
+            else{
+                if(isFacingLeft) {
                     currentGooseFrame = animations.get("walkLeft").getKeyFrame(stateTime, true);
-
-                } else {
+                }
+                else{
                     currentGooseFrame = animations.get("walkRight").getKeyFrame(stateTime, true);
                 }
 
