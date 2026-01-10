@@ -69,6 +69,7 @@ public class SecretEventScreen implements Screen {
         player.sprite.setPosition(x, y);
         player.sprite.setScale(4);
         player.speed = 2;
+        game.foundHiddenEvents += 1;
     }
 
     private void initialiseAudio() {

@@ -430,7 +430,7 @@ public class GameScreen implements Screen {
                         }
 
                         // "student crowd" event
-                        // STUDENT CROWD EVENT (TEST SPAWN ONLY)
+                        // STUDENT CROWD EVENT
                         if (key.equals("bell")) {bellActive = true;
                             bellActive = true;
                             bellTimer = 8f;
@@ -465,12 +465,13 @@ public class GameScreen implements Screen {
                         // ======================
 
 
-                        // === POSITIVE EVENTS ===
+                        // === POSITIVE AND HIDDEN EVENTS ===
                         isEPressed = false;
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
                             item.Collect();
                             numOfInventoryItems += 1;
+                            game.foundHiddenEvents += 1;
                             game.foundPositiveEvents += 1;
                         }
                         if (key.startsWith("shield")){
@@ -499,11 +500,12 @@ public class GameScreen implements Screen {
                             item.isVisible = false;
                             item.playerHas = false;
                             numOfInventoryItems -= 1;
+                            game.foundHiddenEvents += 1;
                         }
                         if (key.equals("homework")){
                             game.score += 50;
-                            initialiseAttackGoose(attackGoose1, 100, 600);
-                            game.foundPositiveEvents += 1;
+                            initialiseAttackGoose(attackGoose1, 500, 100);
+                            game.foundNegativeEvents += 1;
                         }
                         else {
                             item.Collect();
