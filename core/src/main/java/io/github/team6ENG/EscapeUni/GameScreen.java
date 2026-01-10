@@ -471,18 +471,21 @@ public class GameScreen implements Screen {
                             hasGooseFood = true;
                             item.Collect();
                             numOfInventoryItems += 1;
+                            game.foundPositiveEvents += 1;
                         }
                         if (key.startsWith("shield")){
                             healthSystem.shieldOn();
                             hasShield = true;
                             item.Collect();
                             numOfInventoryItems += 1;
+                            game.foundPositiveEvents += 1;
                         }
                         if (key.startsWith("healthBoost")){
                             healthSystem.heal(20f);
                             item.isVisible = false;
                             item.playerHas = false;
                             numOfInventoryItems -= 1;
+                            game.foundPositiveEvents += 1;
                         }
                         if (key.equals("airhorn")){
                             audioManager.playHonk();
@@ -496,6 +499,7 @@ public class GameScreen implements Screen {
                             item.isVisible = false;
                             item.playerHas = false;
                             numOfInventoryItems -= 1;
+                            game.foundPositiveEvents += 1;
                         }
                         if (key.equals("homework")){
                             game.score += 50;
