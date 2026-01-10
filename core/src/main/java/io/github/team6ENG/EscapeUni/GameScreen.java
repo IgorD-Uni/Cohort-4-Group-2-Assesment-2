@@ -504,7 +504,7 @@ public class GameScreen implements Screen {
                         }
                         if (key.equals("homework")){
                             game.score += 50;
-                            initialiseAttackGoose(attackGoose1, 500, 100);
+                            initialiseAttackGoose(attackGoose1, 100, 450);
                             game.foundNegativeEvents += 1;
                         }
                         else {
