@@ -499,11 +499,11 @@ public class GameScreen implements Screen {
                             item.isVisible = false;
                             item.playerHas = false;
                             numOfInventoryItems -= 1;
-                            game.foundPositiveEvents += 1;
                         }
                         if (key.equals("homework")){
                             game.score += 50;
-                            initialiseAttackGoose(attackGoose1, 500, 100);
+                            initialiseAttackGoose(attackGoose1, 100, 600);
+                            game.foundPositiveEvents += 1;
                         }
                         else {
                             item.Collect();
