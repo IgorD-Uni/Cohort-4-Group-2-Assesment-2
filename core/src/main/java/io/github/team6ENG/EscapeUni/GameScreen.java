@@ -49,6 +49,7 @@ public class GameScreen implements Screen {
     Goose goose = new Goose();
     Goose attackGoose1 = new Goose();
     float stateTime;
+    private Rectangle stealTorchTrigger;
     //Secret event entrance
 
     private Texture duckStatue = new Texture("images/Duck-statue.png");
