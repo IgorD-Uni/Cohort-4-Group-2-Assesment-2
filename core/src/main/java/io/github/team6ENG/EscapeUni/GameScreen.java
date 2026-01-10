@@ -290,6 +290,8 @@ public class GameScreen implements Screen {
                 if (beerTimer <= 0) {
                     beerActive = false;
                     isScreenFlipped = false; // reset screen flip
+                    items.remove("bell");
+                    numOfInventoryItems -= 1;
                 }
             }
             if (airhornOn) {
@@ -309,6 +311,8 @@ public class GameScreen implements Screen {
                 if (foodPoisonTimer <= 0f) {
                     foodPoisoned = false;
                     playerSpeedModifier = 1f;
+                    items.remove("bell");
+                    numOfInventoryItems -= 1;
                 }
             }
 
@@ -339,6 +343,8 @@ public class GameScreen implements Screen {
                     bellActive = false;
                     bellStudents.clear();
                     playerSpeedModifier = 1f; // reset speed
+                    items.remove("bell");
+                    numOfInventoryItems -= 1;
                 }
             }
 
@@ -408,8 +414,6 @@ public class GameScreen implements Screen {
                 Collectable item = items.get(key);
                 if(!item.playerHas && item.isVisible && item.originScreen.equals("GameScreen")){
                     if (item.checkInRange(player.sprite.getX(), player.sprite.getY()) && isEPressed){
-                        item.Collect();
-                        numOfInventoryItems += 1;
 
                         // === NEGATIVE EVENTS ===
                         // "tipsy" event
@@ -418,6 +422,8 @@ public class GameScreen implements Screen {
                             beerTimer = 15f; // 15 seconds
                             isScreenFlipped = true; // activate screen flip
                             beerMessageTimer = 4f; // show message for 4 seconds
+                            item.Collect();
+                            numOfInventoryItems += 1;
                             game.foundNegativeEvents += 1;
                         }
 
@@ -426,6 +432,8 @@ public class GameScreen implements Screen {
                             foodPoisoned = true;
                             foodPoisonTimer = 15f; // 15 seconds
                             foodPoisonMessageTimer = 4f; // show message for 4 seconds
+                            item.Collect();
+                            numOfInventoryItems += 1;
                             game.foundNegativeEvents += 1;
                         }
 
@@ -436,6 +444,8 @@ public class GameScreen implements Screen {
                             bellTimer = 8f;
                             bellMessageTimer = 4f;   // show warning for 4 seconds
                             bellEventCounted = true;
+                            item.Collect();
+                            numOfInventoryItems += 1;
                             game.foundNegativeEvents += 1;
                             audioManager.playBellSound();
                             bellStudents.clear();
@@ -466,7 +476,6 @@ public class GameScreen implements Screen {
 
 
                         // === POSITIVE AND HIDDEN EVENTS ===
-                        isEPressed = false;
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
                             item.Collect();
@@ -484,9 +493,9 @@ public class GameScreen implements Screen {
                         if (key.startsWith("healthBoost")){
                             healthSystem.heal(20f);
                             item.isVisible = false;
-                            item.playerHas = false;
-                            numOfInventoryItems -= 1;
+                            item.playSound();
                             game.foundPositiveEvents += 1;
+                            continue;
                         }
                         if (key.equals("airhorn")){
                             audioManager.playHonk();
@@ -498,18 +507,16 @@ public class GameScreen implements Screen {
                             airhornOn = true;
                             airhornOnTimer = 0.5f;
                             item.isVisible = false;
-                            item.playerHas = false;
-                            numOfInventoryItems -= 1;
+                            item.playSound();
                             game.foundHiddenEvents += 1;
+                            continue;
                         }
                         if (key.equals("homework")){
                             game.score += 50;
-                            initialiseAttackGoose(attackGoose1, 100, 450);
-                            game.foundNegativeEvents += 1;
-                        }
-                        else {
                             item.Collect();
                             numOfInventoryItems += 1;
+                            initialiseAttackGoose(attackGoose1, 100, 450);
+                            game.foundNegativeEvents += 1;
                         }
                         isEPressed = false;
 
