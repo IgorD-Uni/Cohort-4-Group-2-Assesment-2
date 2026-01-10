@@ -212,18 +212,17 @@ public class Goose extends SpriteAnimations {
 
     // Hitbox for contact with player sprite
     public void checkHitbox(Rectangle playerBounds, HealthSystem healthSystem, boolean hasGooseFood, float delta) {
-        if (hadGooseFood) {
-            return;
-        }
-        if (isFlying) {
-            return;
-        }
-
         if (paused) {
             pauseTimer -= delta;
             if (pauseTimer <= 0) {
                 paused = false;
             }
+            return;
+        }
+        if (hadGooseFood) {
+            return;
+        }
+        if (isFlying) {
             return;
         }
 
