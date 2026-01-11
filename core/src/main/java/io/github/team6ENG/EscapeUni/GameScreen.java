@@ -291,7 +291,7 @@ public class GameScreen implements Screen {
                 if (beerTimer <= 0) {
                     beerActive = false;
                     isScreenFlipped = false; // reset screen flip
-                    items.remove("bell");
+                    items.remove("beer");
                     numOfInventoryItems -= 1;
                 }
             }
@@ -312,7 +312,7 @@ public class GameScreen implements Screen {
                 if (foodPoisonTimer <= 0f) {
                     foodPoisoned = false;
                     playerSpeedModifier = 1f;
-                    items.remove("bell");
+                    items.remove("rottenPizza");
                     numOfInventoryItems -= 1;
                 }
             }
