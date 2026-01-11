@@ -8,6 +8,7 @@ public class HealthSystem {
     private float health;
     private boolean isInvincible;
     private float invincibleTimer;
+
     private boolean isHit = false;
     private float hitTimer = 0.0f;
 
@@ -58,12 +59,11 @@ public class HealthSystem {
         isInvincible = true;
         invincibleTimer = 10f;
     }
+    public boolean isHit() {return isHit;}
 
     public boolean isInvincible() {
         return isInvincible;
     }
-
-    public boolean isHit() {return isHit;}
 
     public boolean isDead() {
         return health <= 0;

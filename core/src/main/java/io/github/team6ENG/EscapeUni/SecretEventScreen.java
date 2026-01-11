@@ -46,7 +46,7 @@ public class SecretEventScreen implements Screen {
 
     private boolean didThunder =false;
 
-    private Texture textIMG = new Texture("images/TEXTspecial.png");
+    private Texture textIMG = new Texture(Gdx.files.internal("images/TEXTspecial.png"));
 
     /**
      * Creates the secret dungeon
@@ -63,11 +63,11 @@ public class SecretEventScreen implements Screen {
         initialisePlayer((int) 60, (int) game.viewport.getWorldHeight() / 2);
         stateTime = 0;
 
-        map = new Texture("tileMap/dungeon.png");
+        map = new Texture(Gdx.files.internal("tileMap/dungeon.png"));
         initialiseAudio();
         initialiseCamera();
 
-        LongBoi = new Texture("sprites/LongBoi.png");
+        LongBoi = new Texture(Gdx.files.internal("sprites/LongBoi.png"));
         pauseTimer = 0;
     }
 
@@ -77,7 +77,6 @@ public class SecretEventScreen implements Screen {
         player.sprite.setPosition(x, y);
         player.sprite.setScale(4);
         player.speed = 2;
-        game.foundHiddenEvents += 1;
     }
 
     private void initialiseAudio() {
@@ -171,10 +170,10 @@ public class SecretEventScreen implements Screen {
                 gameScreen.getPlayer().sprite.setPosition(1320,1170);
                 for(String key: gameScreen.items.keySet()){
                     Collectable item = gameScreen.items.get(key);
-                        if  (key.equals("phone")){
-                            item.Collect();
-                            gameScreen.numOfInventoryItems += 1;
-                        }}
+                    if  (key.equals("phone")){
+                        item.Collect();
+                        gameScreen.numOfInventoryItems += 1;
+                    }}
                 buildingManager.exitBuilding();
             }
             return;

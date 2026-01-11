@@ -2,6 +2,7 @@ package io.github.team6ENG.EscapeUni;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+//David Modifications
 import com.badlogic.gdx.math.Rectangle;
 
 import java.util.Arrays;
@@ -18,6 +19,7 @@ public class Goose extends SpriteAnimations {
     public boolean hasStolenTorch = false;
     public TextureRegion currentGooseFrame;
     private float speed = 0.75f;
+    //David Modifications - changed to help with hitbox issue
     private int idleDistance = 15;
     public boolean isFlying;
     private TiledMapTileLayer.Cell cell;
@@ -25,6 +27,7 @@ public class Goose extends SpriteAnimations {
     public boolean attackModeActivated = false;
     public boolean isSleeping = false;
     private List<int[]> runPath =  Arrays.asList(new int[]{700, 400}, new int[]{340, 300}, new int[]{600, 150}, new int[]{550, 50});
+    //David Modifications
     private boolean paused = false;
     private float pauseTimer = 0.0f;
     public boolean hadGooseFood = false;
@@ -86,7 +89,6 @@ public class Goose extends SpriteAnimations {
     public void moveGoose(float stateTime, float followX, float followY, boolean isPlayerMoving, boolean followIsSleeping, float delta) {
         //Logic on all geese movement, additional flee logic for attack geese(gray)
         if(paused){return;}
-
         if (isAttackGoose && !isRunningAway && attackTimer <= 0) {
             isRunningAway = true;
         }
@@ -186,6 +188,7 @@ public class Goose extends SpriteAnimations {
                     y += speed;
                 }
                 else if(isMoveAllowed(tileX ,tileY+1)){
+
                     y += speed;
                 }
             }
@@ -193,6 +196,7 @@ public class Goose extends SpriteAnimations {
             if(isFlying){
                 if(isFacingLeft){
                     currentGooseFrame = animations.get("flyLeft").getKeyFrame(stateTime, true);
+
                 }
                 else{
                     currentGooseFrame = animations.get("flyRight").getKeyFrame(stateTime, true);
@@ -201,6 +205,7 @@ public class Goose extends SpriteAnimations {
             else{
                 if(isFacingLeft){
                     currentGooseFrame = animations.get("walkLeft").getKeyFrame(stateTime, true);
+
                 }
                 else{
                     currentGooseFrame = animations.get("walkRight").getKeyFrame(stateTime, true);
@@ -210,8 +215,9 @@ public class Goose extends SpriteAnimations {
         }
     }
 
-    // Hitbox for contact with player sprite
+    //David Modifications - Hitbox for contact with player sprite
     public void checkHitbox(Rectangle playerBounds, HealthSystem healthSystem, boolean hasGooseFood, float delta) {
+
         if (paused) {
             pauseTimer -= delta;
             if (pauseTimer <= 0) {
@@ -243,6 +249,16 @@ public class Goose extends SpriteAnimations {
         return currentGooseFrame != null ? currentGooseFrame.getRegionWidth() : 16f; // default value
     }
 
+    public void pauseFor(float seconds) {
+        paused = true;
+        pauseTimer = seconds;
+    }
+
+    //Check when attack geese are away and no longer required for rendering
+    public boolean ranAway() {
+        return isRunningAway && !isAttackGoose;
+    }
+
     /**
      * get height of goose frame
      * @return height of goose
@@ -250,10 +266,6 @@ public class Goose extends SpriteAnimations {
     public float getHeight() {
 
         return currentGooseFrame != null ? currentGooseFrame.getRegionHeight() : 16f;
-    }
-    public void pauseFor(float seconds) {
-        paused = true;
-        pauseTimer = seconds;
     }
 
     /**
@@ -300,9 +312,5 @@ public class Goose extends SpriteAnimations {
         }
         return runPath.get(0);
 
-    }
-    //Check when attack geese are away and no longer required for rendering
-    public boolean ranAway() {
-        return isRunningAway && !isAttackGoose;
     }
 }

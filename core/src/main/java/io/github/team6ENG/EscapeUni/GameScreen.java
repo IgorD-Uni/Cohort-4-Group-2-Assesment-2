@@ -14,6 +14,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
+//David Modifications
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 
@@ -50,9 +51,10 @@ public class GameScreen implements Screen {
     Goose attackGoose1 = new Goose();
     float stateTime;
     private Rectangle stealTorchTrigger;
+
     //Secret event entrance
 
-    private Texture duckStatue = new Texture("images/Duck-statue.png");
+    private Texture duckStatue = new Texture(Gdx.files.internal("images/duckStatue.png"));
 
 
     // Beer event
@@ -85,10 +87,14 @@ public class GameScreen implements Screen {
     private boolean gooseStolenTorch = false;
 
     private final float probabilityOfHonk = 1000;
-    private boolean hasShield = false;
+
+
+
+    //David Modifications (Assesment 2)
     private boolean wasHit = false;
     private boolean airhornOn = false;
     private float airhornOnTimer = 0f;
+    private boolean hasShield = false;
 
     public final HashMap<String, Collectable> items = new HashMap<String, Collectable>();
     public int numOfInventoryItems = 0;
@@ -102,6 +108,7 @@ public class GameScreen implements Screen {
     public float playerSpeedModifier = 1;
 
     public AudioManager audioManager;
+    //David Modifications (Assesment 2)
     //Health system
     private HealthSystem healthSystem;
     private ShapeRenderer shapeRenderer;
@@ -133,6 +140,7 @@ public class GameScreen implements Screen {
 
         initialiseBus();
 
+        //David Modifications (Assesment 2)
         initialiseHealth();
 
         buildingManager = new BuildingManager(game, this, player, audioManager);
@@ -142,6 +150,7 @@ public class GameScreen implements Screen {
         stateTime = 0f;
 
         game.totalGameTime = game.gameTimer; // save starting timer
+
     }
 
     /**
@@ -181,6 +190,7 @@ public class GameScreen implements Screen {
     /**
      * Initialise goose and set its position
      */
+
     private void initialiseGoose(int x, int y){
 
         goose.loadSprite(collisionLayer, mapWallsId, tileDimensions);
@@ -190,6 +200,7 @@ public class GameScreen implements Screen {
         stealTorchTrigger = new com.badlogic.gdx.math.Rectangle(510, 560, 50, 50);
 
     }
+
     //Initialise attack goose, differs in behaviour to original goose
     private void initialiseAttackGoose(Goose goose, float x, float y) {
         goose.loadSprite(collisionLayer, mapWallsId, tileDimensions);
@@ -199,6 +210,11 @@ public class GameScreen implements Screen {
         goose.isRunningAway = false;
         goose.attackTimer = 15.0f;
     }
+
+    /**
+    * Add and hide light circles for player and goose
+     */
+
 
     /**
      * Load collectable items into items class
@@ -218,8 +234,9 @@ public class GameScreen implements Screen {
         items.put("beer", new Collectable(game, "items/beerIcon.png", 480, 800, 0.1f, true, "GameScreen", audioManager));
         items.put("rottenPizza", new Collectable(game, "items/rottenPizzaIcon.png", 600, 1250, 0.1f, true, "GameScreen", audioManager));
         items.put("bell", new Collectable(game,"items/bell.png",480,600,0.03f,true,"GameScreen", audioManager));
-        items.put("airhorn", new Collectable(game, "items/airhorn.png", 350, 100, 0.2f, true, "GameScreen", audioManager));
+        items.put("airhorn", new Collectable(game, "items/airHorn.png", 350, 100, 0.2f, true, "GameScreen", audioManager));
         items.put("homework", new Collectable(game, "items/homework.png", 100, 200, 0.2f, true, "GameScreen", audioManager));
+
     }
     private void initialiseBus() {
         busTexture = new Texture(Gdx.files.internal("images/bus.png"));
@@ -228,8 +245,8 @@ public class GameScreen implements Screen {
     }
     private  void initialiseAudio() {
         audioManager = new AudioManager(game);
-
     }
+    //David modifications
     private void initialiseHealth() {
         healthSystem = new HealthSystem();
         shapeRenderer = new ShapeRenderer();
@@ -240,6 +257,7 @@ public class GameScreen implements Screen {
      * @param delta - Time since last frame
      */
     private void update(float delta) {
+
         // bus logic
         if (items.get("phone").playerHas && !playerOnBus) {
             player.hasEnteredLangwith = true;
@@ -299,7 +317,6 @@ public class GameScreen implements Screen {
                 }
             }
 
-
             if (foodPoisoned) {
                 foodPoisonTimer -= delta;
                 foodPoisonMessageTimer -= delta;
@@ -346,6 +363,9 @@ public class GameScreen implements Screen {
             float mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
             float mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
 
+
+
+
             player.updatePlayer(stateTime);
             if(player.isMoving && !player.isFootsteps){
                 audioManager.loopFootsteps();
@@ -359,22 +379,22 @@ public class GameScreen implements Screen {
             // Goose follow player
             if(!gooseStolenTorch) {
                 goose.moveGoose(stateTime,
-                        player.sprite.getX() + (player.sprite.getWidth() / 2) - 20,
-                        player.sprite.getY() + (player.sprite.getHeight() / 2),
-                        player.isMoving, false, delta);
+                    player.sprite.getX() + (player.sprite.getWidth() / 2) - 20,
+                    player.sprite.getY() + (player.sprite.getHeight() / 2),
+                    player.isMoving, false, delta);
             }
             else{
                 int[] runCoords = goose.nextRunLocation();
-                goose.moveGoose(stateTime,runCoords[0],runCoords[1],true, false, delta);
+                goose.moveGoose(stateTime,runCoords[0],runCoords[1],true, false,delta);
                 }
             // If there are baby geese, they follow the goose directly in front of them
             Goose trail = goose;
             float stateOffset = 0.075f;
             while (trail.baby != null) {
                 trail.baby.moveGoose(stateTime - stateOffset,
-                        trail.x,
-                        trail.y,
-                        player.isMoving, trail.isSleeping, delta);
+                    trail.x,
+                    trail.y,
+                    player.isMoving, trail.isSleeping, delta);
                 stateOffset += 0.075f;
                 trail = trail.baby;
             }
@@ -401,9 +421,7 @@ public class GameScreen implements Screen {
                 achievements.unlock("Going Swimming");
             }
 
-            // 3. Speedy Finish (after game over)
-
-            // Check if player can pick up items
+            // Check if player can pick up items, David modifications include shield and health boost items, and their conditionals
             for(String key: items.keySet()){
                 Collectable item = items.get(key);
                 if(!item.playerHas && item.isVisible && item.originScreen.equals("GameScreen")){
@@ -430,7 +448,7 @@ public class GameScreen implements Screen {
                         }
 
                         // "student crowd" event
-                        // STUDENT CROWD EVENT
+                        // STUDENT CROWD EVENT (TEST SPAWN ONLY)
                         if (key.equals("bell")) {bellActive = true;
                             bellActive = true;
                             bellTimer = 8f;
@@ -465,13 +483,14 @@ public class GameScreen implements Screen {
                         // ======================
 
 
-                        // === POSITIVE AND HIDDEN EVENTS ===
+                        // === POSITIVE EVENTS ===
                         isEPressed = false;
                         if (key.equals("gooseFood")){
                             hasGooseFood = true;
                             item.Collect();
                             numOfInventoryItems += 1;
                             game.foundPositiveEvents += 1;
+                            //David Modifications - initialise once have picked up goose food
                         }
                         if (key.startsWith("shield")){
                             healthSystem.shieldOn();
@@ -501,15 +520,16 @@ public class GameScreen implements Screen {
                             numOfInventoryItems -= 1;
                             game.foundHiddenEvents += 1;
                         }
-                        if (key.equals("homework")){
+                        if (key.equals("homework")) {
                             game.score += 50;
                             initialiseAttackGoose(attackGoose1, 100, 450);
-                            game.foundNegativeEvents += 1;
                         }
+
                         else {
                             item.Collect();
                             numOfInventoryItems += 1;
                         }
+
                         isEPressed = false;
 
                         // ======================
@@ -527,19 +547,19 @@ public class GameScreen implements Screen {
             if (distance < 30f && hasGooseFood && isEPressed) {
                 items.get("gooseFood").playSound();
                 items.remove("gooseFood");
-                numOfInventoryItems -= 1;
                 goose.loadBabyGoose(0);
+                numOfInventoryItems -= 1;
                 game.foundHiddenEvents += 1;
                 game.score += 100;
                 hasGooseFood = false;
-                //Stop attacking human after food fed
+                //David Modifications - stop attacking human after food fed
                 goose.hadGooseFood = true;
             }
 
             isEPressed = false;
 
 
-            //Health system update, and shield activation duration
+            //David modifications for health system collection
             healthSystem.update(delta);
 
             if (hasShield && !healthSystem.isInvincible()) {
@@ -565,6 +585,7 @@ public class GameScreen implements Screen {
                         true, false, delta);
                 attackGoose1.checkHitbox(playerBounds, healthSystem, false, delta);
             }
+
 
             if (healthSystem.isHit() && !wasHit) {
                 audioManager.playImpact();
@@ -657,7 +678,6 @@ public class GameScreen implements Screen {
         camera.update();
 }
 
-
     @Override
     public void show() {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -699,15 +719,17 @@ public class GameScreen implements Screen {
 
         game.batch.draw(goose.currentGooseFrame, goose.x, goose.y);
 
+        //David Modifications (Assesment 2)
+
+
+
         //Draw yellow baby geese
         game.batch.setColor(Color.YELLOW);
         Goose trail = goose;
         while (trail.baby != null){
             trail = trail.baby;
             if (trail.currentGooseFrame != null) {
-
                 game.batch.draw(trail.currentGooseFrame, trail.x, trail.y, 16f, 16f);
-
             }
 
         }
@@ -718,6 +740,7 @@ public class GameScreen implements Screen {
             game.batch.draw(attackGoose1.currentGooseFrame, attackGoose1.x, attackGoose1.y);
         }
         game.batch.setColor(Color.WHITE);
+
         // Draw uncollected items in game
         for(String key: items.keySet()){
             Collectable item = items.get(key);
@@ -746,12 +769,14 @@ public class GameScreen implements Screen {
 
         }
 
+
         //Draw secret event entrance
         game.batch.draw(duckStatue, 1275,100, 200,200);
 
         game.batch.draw(busTexture, busX, busY, 100, 60);
         int mapWidth = collisionLayer.getWidth() * collisionLayer.getTileWidth();
         int mapHeight = collisionLayer.getHeight() * collisionLayer.getTileHeight();
+
 
         game.batch.end();
 
@@ -775,7 +800,6 @@ public class GameScreen implements Screen {
 
             game.batch.end();
         }
-
 
         // ---- FOOD POISONING OVERLAY ----
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
@@ -811,12 +835,10 @@ public class GameScreen implements Screen {
                     game.viewport.getWorldHeight() * 0.75f
 
             );
+
+
             game.batch.end();
-
-
         }
-
-
 
 
         if (isScreenFlipped) {
@@ -866,7 +888,7 @@ public class GameScreen implements Screen {
             }
         }
 
-        healthSystem.render(shapeRenderer, camera);
+        //David Modifications (Assesment 2)
         game.batch.setColor(Color.WHITE);
 
         //Airhorn flash visually cues scaring the geese
@@ -880,6 +902,9 @@ public class GameScreen implements Screen {
             game.batch.end();
         }
 
+
+        healthSystem.render(shapeRenderer, camera);
+
         renderUI();
 
         game.batch.begin();
@@ -887,8 +912,6 @@ public class GameScreen implements Screen {
                 achievements.render(game.batch, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
             }
         game.batch.end();
-
-
 
     }
     Random random = new Random();
@@ -954,6 +977,7 @@ public class GameScreen implements Screen {
                 else {
                     instructions = "Press 'e' to collect " + key;
                 }
+
             }
         }
         //Draw instructions
@@ -961,6 +985,7 @@ public class GameScreen implements Screen {
         float textX = (worldWidth - layout.width) / 2;
 
         drawText(bigFont, instructions, Color.BLACK, textX, worldHeight * 0.75f);
+
 
         float y = worldHeight - 20f;
         float lineSpacing = 15f;
@@ -976,6 +1001,8 @@ public class GameScreen implements Screen {
         drawText(bigFont, ((int)game.gameTimer/60 + ":" +((int)game.gameTimer % 60 <10?"0" :"" ) +(int)game.gameTimer % 60), Color.WHITE, worldWidth - 80f, worldHeight-20f);
         layout = new GlyphLayout(game.menuFont, ("Score: " + (int)game.score));
         drawText(bigFont, ("Score: " +(int)game.score), Color.WHITE, (worldWidth - layout.width)/2, worldHeight-20f);
+
+
 
         // Game instructions
         drawText(bigFont, "Press 'p' to pause", Color.WHITE, 20, 55);
@@ -1007,13 +1034,14 @@ public class GameScreen implements Screen {
             }
         }
         return "";
+
     }
 
     public Player getPlayer() {
         return player;
     }
 
-    //Losing game depending on losing health or time up (bus gone)
+    //David Modifications - losing game on basis losing health or time up (bus gone)
     public void loseGame() {
         if (gameoverTrigger) return;
         gameoverTrigger = true;
@@ -1065,7 +1093,6 @@ public class GameScreen implements Screen {
         });
     }
 
-
     /**
      * Helper method: text rendering logic to avoid repeated setColor() calls
      * @param font  The BitmapFont to use for rendering
@@ -1078,7 +1105,6 @@ public class GameScreen implements Screen {
         font.setColor(colour);
         font.draw(game.batch, text, x, y);
     }
-
 
     @Override
     public void resize(int width, int height) {
@@ -1125,10 +1151,13 @@ public class GameScreen implements Screen {
 
         if (busTexture != null) busTexture.dispose();
 
+        //David Modifications
         if (shapeRenderer != null) {
             shapeRenderer.dispose();
         }
 
         if (whitePixel != null) whitePixel.dispose();
+
+
     }
 }
