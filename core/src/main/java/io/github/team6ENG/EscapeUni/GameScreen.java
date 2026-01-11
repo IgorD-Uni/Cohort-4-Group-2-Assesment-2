@@ -83,6 +83,7 @@ public class GameScreen implements Screen {
     private boolean hasGooseFood = false;
     private boolean gameoverTrigger = false;
     private boolean gooseStolenTorch = false;
+    private boolean gooseHasHit = false;
 
     private final float probabilityOfHonk = 1000;
     private boolean hasShield = false;
@@ -562,6 +563,10 @@ public class GameScreen implements Screen {
             );
 
             goose.checkHitbox(playerBounds, healthSystem, goose.hadGooseFood, delta);
+            if (!gooseHasHit && healthSystem.isHit()) {
+                game.foundNegativeEvents += 1;
+                gooseHasHit = true;
+            }
 
             //Update attack geese movement and check hitbox
             if (attackGoose1.isAttackGoose && !attackGoose1.ranAway()) {
