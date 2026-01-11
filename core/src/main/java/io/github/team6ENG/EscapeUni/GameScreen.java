@@ -471,7 +471,6 @@ public class GameScreen implements Screen {
                             hasGooseFood = true;
                             item.Collect();
                             numOfInventoryItems += 1;
-                            game.foundHiddenEvents += 1;
                             game.foundPositiveEvents += 1;
                         }
                         if (key.startsWith("shield")){
