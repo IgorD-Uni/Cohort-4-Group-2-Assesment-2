@@ -48,6 +48,14 @@ public class SecretEventScreen implements Screen {
 
     private Texture textIMG = new Texture("images/TEXTspecial.png");
 
+    /**
+     * Creates the secret dungeon
+     *
+     * @param game The main framework the game will be set  in
+     * @param buildingManager connect the secret dungeon to the main map and to other rooms.
+     * @param gameScreen connects to the main screen functionality and variables
+     */
+
     public SecretEventScreen(Main game, BuildingManager buildingManager, GameScreen gameScreen) {
         this.game = game;
         this.buildingManager = buildingManager;
@@ -161,6 +169,12 @@ public class SecretEventScreen implements Screen {
 
 
                 gameScreen.getPlayer().sprite.setPosition(1320,1170);
+                for(String key: gameScreen.items.keySet()){
+                    Collectable item = gameScreen.items.get(key);
+                        if  (key.equals("phone")){
+                            item.Collect();
+                            gameScreen.numOfInventoryItems += 1;
+                        }}
                 buildingManager.exitBuilding();
             }
             return;
