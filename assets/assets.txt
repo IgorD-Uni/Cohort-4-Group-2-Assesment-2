@@ -1,8 +1,8 @@
 fonts/menuScreenFont.fnt
 fonts/menuScreenFont.png
-images/Duck-Statue.png
 images/TEXTspecial.png
 images/bus.png
+images/duckStatue.png
 images/femaleSpriteImg.png
 images/maleSpriteImg.png
 items/beerIcon.png
