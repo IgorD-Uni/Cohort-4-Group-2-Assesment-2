@@ -495,7 +495,6 @@ public class GameScreen implements Screen {
                             item.isVisible = false;
                             item.playSound();
                             game.foundPositiveEvents += 1;
-                            continue;
                         }
                         if (key.equals("airhorn")){
                             audioManager.playHonk();
@@ -509,7 +508,6 @@ public class GameScreen implements Screen {
                             item.isVisible = false;
                             item.playSound();
                             game.foundHiddenEvents += 1;
-                            continue;
                         }
                         if (key.equals("homework")){
                             game.score += 50;
